@@ -207,17 +207,17 @@ export const users = [
   {
     id: 'admin1',
     name: 'Admin User',
-    email: 'admin@example.com',
-    password: 'admin123', // In a real app, this would be hashed
-    phone: '+1234567890',
+    email: 'mackdos.tec@gmail.com',
+    password: '11223344#Xm@', // In a real app, this would be hashed
+    phone: '+930633779',
     role: 'admin' as const,
   },
   {
     id: 'customer1',
     name: 'Store Owner',
-    email: 'customer@example.com',
-    password: 'customer123', // In a real app, this would be hashed
-    phone: '+9876543210',
+    email: 'zain@gmail.com',
+    password: 'zainhadad', // In a real app, this would be hashed
+    phone: '+963988227473',
     role: 'customer' as const,
     telegramId: '@storeowner',
   },
