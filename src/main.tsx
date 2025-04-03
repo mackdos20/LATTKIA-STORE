@@ -17,6 +17,7 @@ import SubcategoryPage from "./pages/subcategory";
 import ProductPage from "./pages/product";
 import CartPage from "./pages/cart";
 import OrdersPage from "./pages/orders";
+import OrderDetailsPage from "./pages/orders/[id]";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin";
@@ -25,6 +26,8 @@ import AdminProducts from "./pages/admin/products";
 import AdminCategories from "./pages/admin/categories";
 import AdminOrders from "./pages/admin/orders";
 import AdminNotifications from "./pages/admin/notifications";
+import AdminSettings from "./pages/admin/settings";
+import AdminMarquee from "./pages/admin/marquee";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +47,7 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/products/:productId" element={<ProductPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/orders/:id" element={<OrderDetailsPage />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminDashboard />} />
@@ -52,6 +56,8 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/admin/products" element={<AdminProducts />} />
             <Route path="/admin/orders" element={<AdminOrders />} />
             <Route path="/admin/notifications" element={<AdminNotifications />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/marquee" element={<AdminMarquee />} />
           </Routes>
         </BrowserRouter>
         <Sonner />

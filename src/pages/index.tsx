@@ -18,6 +18,13 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { addItem } = useCartStore();
   const { toast } = useToast();
+  const [marqueeItems, setMarqueeItems] = useState<string[]>([
+    "🔥 عروض حصرية على شواحن سامسونج - خصم 15% عند شراء 50 قطعة أو أكثر!",
+    "🎧 سماعات بلوتوث لاسلكية - خصم 20% على الكميات!",
+    "📱 كفرات حماية لجميع الموديلات - اطلب الآن!",
+    "🚚 توصيل مجاني للطلبات فوق 500 دولار!"
+  ]);
+  const [marqueeSpeed, setMarqueeSpeed] = useState("30");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,6 +44,45 @@ const Index = () => {
     };
     
     fetchData();
+    
+    // جلب بيانات الشريط المتحرك من localStorage
+    const savedItems = localStorage.getItem('marqueeItems');
+    const savedSpeed = localStorage.getItem('marqueeSpeed');
+    
+    if (savedItems) {
+      setMarqueeItems(JSON.parse(savedItems));
+    }
+    
+    if (savedSpeed) {
+      setMarqueeSpeed(savedSpeed);
+    }
+    
+    // تحديث CSS للشريط المتحرك
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+      @keyframes marquee {
+        0% {
+          transform: translateX(100%);
+        }
+        100% {
+          transform: translateX(-100%);
+        }
+      }
+      
+      .marquee-content {
+        animation: marquee ${savedSpeed || 30}s linear infinite;
+      }
+    `;
+    
+    // إزالة أي عنصر style سابق
+    const oldStyle = document.getElementById('marquee-style');
+    if (oldStyle) {
+      oldStyle.remove();
+    }
+    
+    // إضافة عنصر style الجديد
+    styleElement.id = 'marquee-style';
+    document.head.appendChild(styleElement);
   }, []);
 
   const handleAddToCart = (product: Product) => {
@@ -105,18 +151,11 @@ const Index = () => {
         <div className={`py-3 ${theme === 'dark' ? 'bg-pink-900/30' : 'bg-pink-100'} overflow-hidden`}>
           <div className="marquee-container">
             <div className="marquee-content">
-              <span className={`text-lg font-medium ${theme === 'dark' ? 'text-pink-300' : 'text-pink-600'} px-4`}>
-                🔥 عروض حصرية على شواحن سامسونج - خصم 15% عند شراء 50 قطعة أو أكثر!
-              </span>
-              <span className={`text-lg font-medium ${theme === 'dark' ? 'text-pink-300' : 'text-pink-600'} px-4`}>
-                🎧 سماعات بلوتوث لاسلكية - خصم 20% على الكميات!
-              </span>
-              <span className={`text-lg font-medium ${theme === 'dark' ? 'text-pink-300' : 'text-pink-600'} px-4`}>
-                📱 كفرات حماية لجميع الموديلات - اطلب الآن!
-              </span>
-              <span className={`text-lg font-medium ${theme === 'dark' ? 'text-pink-300' : 'text-pink-600'} px-4`}>
-                🚚 توصيل مجاني للطلبات فوق 500 دولار!
-              </span>
+              {marqueeItems.map((item, index) => (
+                <span key={index} className={`text-lg font-medium ${theme === 'dark' ? 'text-pink-300' : 'text-pink-600'} px-4`}>
+                  {item}
+                </span>
+              ))}
             </div>
           </div>
         </div>
@@ -258,28 +297,6 @@ const Index = () => {
           </div>
         </section>
       </div>
-      
-      <style dangerouslySetInnerHTML={{ __html: `
-        .marquee-container {
-          width: 100%;
-          overflow: hidden;
-        }
-        
-        .marquee-content {
-          display: inline-block;
-          white-space: nowrap;
-          animation: marquee 30s linear infinite;
-        }
-        
-        @keyframes marquee {
-          0% {
-            transform: translateX(100%);
-          }
-          100% {
-            transform: translateX(-100%);
-          }
-        }
-      `}} />
     </MainLayout>
   );
 };

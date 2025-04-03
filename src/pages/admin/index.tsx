@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import { useThemeStore } from "@/lib/theme";
 import { useAuthStore } from "@/lib/stores/auth-store";
-import { Users, Package, ShoppingBag, BarChart3 } from "lucide-react";
+import { Users, Package, ShoppingBag, BarChart3, Settings, Bot, MessageSquare } from "lucide-react";
 
 const AdminDashboard = () => {
   const { theme } = useThemeStore();
@@ -176,15 +176,29 @@ const AdminDashboard = () => {
                   إدارة المنتجات
                 </Button>
               </Link>
+              
+              <Link to="/admin/marquee">
+                <Button 
+                  variant="outline" 
+                  className={`w-full justify-start ${
+                    theme === 'dark' 
+                      ? 'border-pink-700 hover:bg-pink-900/30 text-pink-400' 
+                      : 'border-pink-300 hover:bg-pink-50 text-pink-600'
+                  }`}
+                >
+                  <MessageSquare className="h-5 w-5 mr-2" />
+                  إدارة الشريط المتحرك
+                </Button>
+              </Link>
             </CardContent>
           </Card>
           
           <Card className={`border ${
-            theme === 'dark' ? 'border-blue-800 bg-blue-950/30' : 'border-blue-200'
+            theme === 'dark'? 'border-blue-800 bg-blue-950/30' : 'border-blue-200'
           }`}>
             <CardHeader>
               <CardTitle className={theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}>
-                إدارة الطلبات
+                إدارة الطلبات والإشعارات
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -227,6 +241,20 @@ const AdminDashboard = () => {
                 >
                   <Package className="h-5 w-5 mr-2" />
                   إرسال إشعارات للعملاء
+                </Button>
+              </Link>
+              
+              <Link to="/admin/settings">
+                <Button 
+                  variant="outline" 
+                  className={`w-full justify-start ${
+                    theme === 'dark' 
+                      ? 'border-green-700 hover:bg-green-900/30 text-green-400' 
+                      : 'border-green-300 hover:bg-green-50 text-green-600'
+                  }`}
+                >
+                  <Bot className="h-5 w-5 mr-2" />
+                  إعدادات بوت تيليجرام
                 </Button>
               </Link>
             </CardContent>

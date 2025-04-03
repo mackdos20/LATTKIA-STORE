@@ -87,3 +87,66 @@
 main {
   @apply min-h-screen w-full;
 }
+
+/* تحسين ألوان الخطوط في وضع الدارك مود */
+.dark {
+  --text-primary: 210 100% 85%;
+  --text-secondary: 210 70% 75%;
+  --text-muted: 210 40% 65%;
+  --text-accent: 330 80% 75%;
+  --text-success: 142 70% 70%;
+  --text-warning: 40 90% 70%;
+  --text-danger: 0 90% 70%;
+}
+
+.dark .text-primary {
+  color: hsl(var(--text-primary));
+}
+
+.dark .text-secondary {
+  color: hsl(var(--text-secondary));
+}
+
+.dark .text-muted-foreground {
+  color: hsl(var(--text-muted));
+}
+
+.dark .text-blue-300 {
+  color: hsl(210, 100%, 85%);
+}
+
+.dark .text-blue-400 {
+  color: hsl(210, 100%, 80%);
+}
+
+.dark .text-green-400 {
+  color: hsl(142, 70%, 70%);
+}
+
+.dark .text-pink-400 {
+  color: hsl(330, 80%, 75%);
+}
+
+.dark .text-yellow-400 {
+  color: hsl(40, 90%, 70%);
+}
+
+.marquee-container {
+  width: 100%;
+  overflow: hidden;
+}
+
+.marquee-content {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 30s linear infinite;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
