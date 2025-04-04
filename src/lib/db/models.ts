@@ -40,7 +40,7 @@ export type Discount = {
 export type Order = {
   id: string;
   userId: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'approved' | 'shipping';
   createdAt: string;
   expectedDeliveryTime?: string;
   items: OrderItem[];
