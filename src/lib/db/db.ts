@@ -1,5 +1,5 @@
-import { Category, Subcategory, Product, Order, OrderItem, Discount } from './models';
-import { categories, subcategories, products, orders } from './mock-data';
+import { Category, Subcategory, Product, Order, OrderItem, Discount, User } from './models';
+import { categories, subcategories, products, orders, users } from './mock-data';
 
 export const db = {
   // Categories

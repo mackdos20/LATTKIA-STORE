@@ -13,11 +13,13 @@ type CartState = {
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
+  getTotal: () => number;
+  getItemCount: () => number;
 };
 
 export const useCartStore = create<CartState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       items: [],
       loading: false,
       error: null,
@@ -52,6 +54,33 @@ export const useCartStore = create<CartState>()(
       },
       clearCart: () => {
         set({ items: [] });
+      },
+      getTotal: () => {
+        return get().items.reduce((total, item) => {
+          let price = item.product.price;
+          
+          // Apply discount if available
+          if (item.product.discounts && item.product.discounts.length > 0) {
+            // Sort discounts by minQuantity in descending order
+            const sortedDiscounts = [...item.product.discounts].sort(
+              (a, b) => b.minQuantity - a.minQuantity
+            );
+            
+            // Find the applicable discount
+            const applicableDiscount = sortedDiscounts.find(
+              (discount) => item.quantity >= discount.minQuantity
+            );
+            
+            if (applicableDiscount) {
+              price = price * (1 - applicableDiscount.discountPercentage / 100);
+            }
+          }
+          
+          return total + price * item.quantity;
+        }, 0);
+      },
+      getItemCount: () => {
+        return get().items.reduce((count, item) => count + item.quantity, 0);
       },
     }),
     {

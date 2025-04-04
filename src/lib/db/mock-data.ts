@@ -202,20 +202,20 @@ export const orders: Order[] = [
   {
     id: '1',
     userId: '1',
-    status: 'pending' as const,
+    status: 'pending',
     createdAt: '2024-01-01T00:00:00Z',
-    expectedDeliveryTime: '2024-01-02T00:00:00Z',
+    expectedDeliveryTime: '2024-01-03T00:00:00Z',
     items: [
       {
         id: '1',
         orderId: '1',
         productId: '1',
         product: products[0],
-        quantity: 1,
-        price: products[0].price,
-      },
+        quantity: 2,
+        price: 25
+      }
     ],
-    total: products[0].price,
+    total: 50
   },
 ];
 

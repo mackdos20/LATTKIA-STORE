@@ -1,6 +1,6 @@
 import { categories, subcategories, products, orders, users } from './db/mock-data';
-import { Category, Subcategory, Product, Order, Discount } from './db/models';
-import { User } from './stores/auth-store';
+import { Category, Subcategory, Product, Order, Discount, User } from './db/models';
+import { User as AuthUser } from './stores/auth-store';
 import TelegramBot from 'node-telegram-bot-api';
 
 // Simulate API delay
@@ -39,18 +39,45 @@ const getTelegramBot = () => {
 };
 
 export const api = {
-  // Auth
-  login: async (email: string, password: string): Promise<{ user: User; token: string } | null> => {
-    await delay(500);
-    const user = users.find(u => u.email === email && u.password === password);
-    if (!user) return null;
-    
-    // Remove password from user object
-    const { password: _, ...userWithoutPassword } = user;
-    return {
-      user: userWithoutPassword as User,
-      token: 'mock-jwt-token',
-    };
+  auth: {
+    login: async (email: string, password: string) => {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to login');
+      }
+      return data;
+    },
+    register: async (user: Omit<User, 'id'> & { password: string }) => {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(user),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to register');
+      }
+      return data;
+    },
+    logout: async () => {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to logout');
+      }
+      return data;
+    },
   },
   
   // Categories
