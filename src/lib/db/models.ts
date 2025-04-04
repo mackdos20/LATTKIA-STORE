@@ -2,13 +2,7 @@ export type Category = {
   id: string;
   name: string;
   image: string;
-};
-
-export type Subcategory = {
-  id: string;
-  name: string;
-  categoryId: string;
-  image: string;
+  description?: string;
 };
 
 export type Product = {
@@ -16,34 +10,30 @@ export type Product = {
   name: string;
   description: string;
   price: number;
-  stock: number;
-  subcategoryId: string;
   image: string;
-  discounts?: Discount[];
+  categoryId: string;
+  subcategoryId?: string;
+  stock: number;
+  discounts?: {
+    quantity: number;
+    percentage: number;
+  }[];
+  featured?: boolean;
 };
 
-export type Discount = {
+export type User = {
   id: string;
-  productId: string;
-  minQuantity: number;
-  discountPercentage: number;
+  name: string;
+  email: string;
+  role?: string;
 };
 
-export type Order = {
-  id: string;
+export type LoginLog = {
+  id: number;
   userId: string;
-  status: 'pending' | 'approved' | 'shipping' | 'delivered' | 'cancelled';
-  createdAt: string;
-  expectedDeliveryTime?: string;
-  items: OrderItem[];
-  total: number;
-};
-
-export type OrderItem = {
-  id: string;
-  orderId: string;
-  productId: string;
-  product: Product;
-  quantity: number;
-  price: number;
+  timestamp: string;
+  ipAddress: string;
+  userAgent: string;
+  success: boolean;
+  failureReason: string | null;
 };

@@ -11,7 +11,7 @@ export default function Logout() {
     logout();
     toast({
       title: "تم تسجيل الخروج",
-      description: "تم تسجيل خروجك بنجاح",
+      description: "تم تسجيل الخروج بنجاح",
     });
   }, [logout, toast]);
   
