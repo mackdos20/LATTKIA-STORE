@@ -1,0 +1,9 @@
+CREATE TABLE login_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  userId TEXT NOT NULL,
+  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+  ipAddress TEXT,
+  userAgent TEXT,
+  success BOOLEAN NOT NULL,
+  failureReason TEXT
+);

@@ -1,5 +1,4 @@
 import type React from "react";
-
 import { useState } from "react";
 import { useNavigate, Link, Navigate } from "react-router-dom";
 import { fine } from "@/lib/fine";
@@ -9,17 +8,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { BackButton } from "@/components/ui/back-button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function SignupForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    confirmPassword: "",
     name: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -48,6 +51,12 @@ export default function SignupForm() {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 8) {
       newErrors.password = "Password must be at least 8 characters";
+    }
+
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = "Please confirm your password";
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
     }
 
     if (!formData.name) {
@@ -113,11 +122,16 @@ export default function SignupForm() {
   if (!isPending && data) return <Navigate to='/' />;
 
   return (
-    <div className='container mx-auto flex h-screen items-center justify-center py-10'>
+    <div className='container mx-auto flex min-h-screen items-center justify-center px-4 py-10'>
       <Card className='mx-auto w-full max-w-md'>
-        <CardHeader>
-          <CardTitle className='text-2xl'>Create an account</CardTitle>
-          <CardDescription>Enter your details below to create your account</CardDescription>
+        <CardHeader className="relative">
+          <div className="absolute left-4 top-4">
+            <BackButton to="/" />
+          </div>
+          <div className="pt-2">
+            <CardTitle className='text-2xl'>Create an account</CardTitle>
+            <CardDescription>Enter your details below to create your account</CardDescription>
+          </div>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className='space-y-4'>
@@ -131,6 +145,7 @@ export default function SignupForm() {
                 onChange={handleChange}
                 disabled={isLoading}
                 aria-invalid={!!errors.name}
+                className="h-11"
               />
               {errors.name && <p className='text-sm text-destructive'>{errors.name}</p>}
             </div>
@@ -146,6 +161,7 @@ export default function SignupForm() {
                 onChange={handleChange}
                 disabled={isLoading}
                 aria-invalid={!!errors.email}
+                className="h-11"
               />
               {errors.email && <p className='text-sm text-destructive'>{errors.email}</p>}
             </div>
@@ -156,17 +172,35 @@ export default function SignupForm() {
                 id='password'
                 name='password'
                 type='password'
+                placeholder="••••••••"
                 value={formData.password}
                 onChange={handleChange}
                 disabled={isLoading}
                 aria-invalid={!!errors.password}
+                className="h-11"
               />
               {errors.password && <p className='text-sm text-destructive'>{errors.password}</p>}
+            </div>
+
+            <div className='space-y-2'>
+              <Label htmlFor='confirmPassword'>Confirm Password</Label>
+              <Input
+                id='confirmPassword'
+                name='confirmPassword'
+                type='password'
+                placeholder="••••••••"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                disabled={isLoading}
+                aria-invalid={!!errors.confirmPassword}
+                className="h-11"
+              />
+              {errors.confirmPassword && <p className='text-sm text-destructive'>{errors.confirmPassword}</p>}
             </div>
           </CardContent>
 
           <CardFooter className='flex flex-col space-y-4'>
-            <Button type='submit' className='w-full' disabled={isLoading}>
+            <Button type='submit' className='w-full h-11' disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className='mr-2 h-4 w-4 animate-spin' />
