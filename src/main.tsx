@@ -30,6 +30,8 @@ import AdminOrders from "./pages/admin/orders";
 import AdminNotifications from "./pages/admin/notifications";
 import AdminSettings from "./pages/admin/settings";
 import AdminMarquee from "./pages/admin/marquee";
+import AdminProfitDashboard from "./pages/admin/profit-dashboard";
+import AdminTelegramBot from "./pages/admin/telegram-bot";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +64,8 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/admin/notifications" element={<AdminNotifications />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/marquee" element={<AdminMarquee />} />
+            <Route path="/admin/profit-dashboard" element={<AdminProfitDashboard />} />
+            <Route path="/admin/telegram-bot" element={<AdminTelegramBot />} />
           </Routes>
         </BrowserRouter>
         <Sonner />

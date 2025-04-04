@@ -1,64 +1,48 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
-type ThemeState = {
-  theme: 'light' | 'dark';
-  setTheme: (theme: 'light' | 'dark') => void;
-  toggleTheme: () => void;
-};
+type Theme = 'light' | 'dark';
 
-export const useThemeStore = create<ThemeState>((set) => {
-  // Initialize theme from localStorage or system preference
-  const savedTheme = typeof window !== 'undefined' ? localStorage.getItem('theme') : null;
-  const initialTheme = savedTheme 
-    ? (savedTheme as 'light' | 'dark')
-    : (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches 
-      ? 'dark' 
-      : 'light');
-  
-  // Apply theme to document
-  if (typeof document !== 'undefined') {
-    if (initialTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }
-  
-  return {
-    theme: initialTheme,
-    setTheme: (theme) => {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('theme', theme);
-      }
-      
-      if (typeof document !== 'undefined') {
+interface ThemeState {
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+}
+
+export const useThemeStore = create<ThemeState>()(
+  persist(
+    (set) => ({
+      theme: 'light',
+      setTheme: (theme) => {
+        set({ theme });
+        
+        // Apply theme to document
         if (theme === 'dark') {
           document.documentElement.classList.add('dark');
         } else {
           document.documentElement.classList.remove('dark');
         }
-      }
-      
-      set({ theme });
-    },
-    toggleTheme: () => {
-      set((state) => {
-        const newTheme = state.theme === 'light' ? 'dark' : 'light';
-        
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('theme', newTheme);
+      },
+    }),
+    {
+      name: 'theme-storage',
+      onRehydrateStorage: (state) => {
+        // Apply theme when storage is rehydrated
+        if (state?.theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
         }
-        
-        if (typeof document !== 'undefined') {
-          if (newTheme === 'dark') {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-          }
-        }
-        
-        return { theme: newTheme };
-      });
+      },
     }
-  };
-});
+  )
+);
+
+// Initialize theme based on system preference if not already set
+if (typeof window !== 'undefined') {
+  const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const storedTheme = localStorage.getItem('theme-storage');
+  
+  if (!storedTheme) {
+    useThemeStore.getState().setTheme(isDarkMode ? 'dark' : 'light');
+  }
+}

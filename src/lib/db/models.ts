@@ -1,8 +1,9 @@
+// Database models
+
 export type Category = {
   id: string;
   name: string;
   image: string;
-  description?: string;
 };
 
 export type Product = {
@@ -12,28 +13,21 @@ export type Product = {
   price: number;
   image: string;
   categoryId: string;
-  subcategoryId?: string;
   stock: number;
-  discounts?: {
-    quantity: number;
-    percentage: number;
-  }[];
-  featured?: boolean;
+  featured: boolean;
+  discounts: { quantity: string; percentage: string }[];
 };
 
-export type User = {
+export type Order = {
   id: string;
-  name: string;
-  email: string;
-  role?: string;
-};
-
-export type LoginLog = {
-  id: number;
   userId: string;
-  timestamp: string;
-  ipAddress: string;
-  userAgent: string;
-  success: boolean;
-  failureReason: string | null;
+  items: {
+    productId: string;
+    quantity: number;
+    price: number;
+  }[];
+  total: number;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
 };

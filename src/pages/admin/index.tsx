@@ -1,268 +1,235 @@
-import { useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
-import { MainLayout } from "@/components/layout/MainLayout";
+import { AdminLayout } from "@/components/layout/AdminLayout";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { api } from "@/lib/api";
 import { useThemeStore } from "@/lib/theme";
-import { useAuthStore } from "@/lib/stores/auth-store";
-import { Users, Package, ShoppingBag, BarChart3, Settings, Bot, MessageSquare } from "lucide-react";
+import { Link } from "react-router-dom";
+import { 
+  BarChart3, 
+  Users, 
+  Package, 
+  ShoppingCart, 
+  Settings, 
+  Bell, 
+  MessageSquare,
+  DollarSign,
+  TrendingUp,
+  Bot
+} from "lucide-react";
 
-const AdminDashboard = () => {
+export default function AdminDashboard() {
   const { theme } = useThemeStore();
-  const { user } = useAuthStore();
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalProducts: 0,
-    totalOrders: 0,
-    pendingOrders: 0,
-  });
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        // In a real app, we would fetch these stats from the API
-        // For now, we'll use mock data
-        const orders = await api.getOrders();
-        const products = await api.getProducts();
-        
-        setStats({
-          totalUsers: 5, // Mock data
-          totalProducts: products.length,
-          totalOrders: orders.length,
-          pendingOrders: orders.filter(order => order.status === 'pending').length,
-        });
-      } catch (error) {
-        console.error("Error fetching stats:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchStats();
-  }, []);
+  const adminModules = [
+    {
+      title: "لوحة الأرباح",
+      description: "تحليل الإيرادات والأرباح",
+      icon: <BarChart3 className="h-6 w-6" />,
+      link: "/admin/profit-dashboard",
+      color: theme === 'dark' ? 'bg-blue-900/30 border-blue-800 hover:bg-blue-900/50' : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+    },
+    {
+      title: "المستخدمين",
+      description: "إدارة حسابات المستخدمين",
+      icon: <Users className="h-6 w-6" />,
+      link: "/admin/users",
+      color: theme === 'dark' ? 'bg-green-900/30 border-green-800 hover:bg-green-900/50' : 'bg-green-50 border-green-200 hover:bg-green-100'
+    },
+    {
+      title: "المنتجات",
+      description: "إدارة المنتجات والمخزون",
+      icon: <Package className="h-6 w-6" />,
+      link: "/admin/products",
+      color: theme === 'dark' ? 'bg-purple-900/30 border-purple-800 hover:bg-purple-900/50' : 'bg-purple-50 border-purple-200 hover:bg-purple-100'
+    },
+    {
+      title: "الطلبات",
+      description: "إدارة طلبات العملاء",
+      icon: <ShoppingCart className="h-6 w-6" />,
+      link: "/admin/orders",
+      color: theme === 'dark' ? 'bg-amber-900/30 border-amber-800 hover:bg-amber-900/50' : 'bg-amber-50 border-amber-200 hover:bg-amber-100'
+    },
+    {
+      title: "الفئات",
+      description: "إدارة فئات المنتجات",
+      icon: <Package className="h-6 w-6" />,
+      link: "/admin/categories",
+      color: theme === 'dark' ? 'bg-indigo-900/30 border-indigo-800 hover:bg-indigo-900/50' : 'bg-indigo-50 border-indigo-200 hover:bg-indigo-100'
+    },
+    {
+      title: "الإشعارات",
+      description: "إدارة إشعارات التطبيق",
+      icon: <Bell className="h-6 w-6" />,
+      link: "/admin/notifications",
+      color: theme === 'dark' ? 'bg-red-900/30 border-red-800 hover:bg-red-900/50' : 'bg-red-50 border-red-200 hover:bg-red-100'
+    },
+    {
+      title: "بوت التلغرام",
+      description: "إعدادات بوت التلغرام",
+      icon: <Bot className="h-6 w-6" />,
+      link: "/admin/telegram-bot",
+      color: theme === 'dark' ? 'bg-cyan-900/30 border-cyan-800 hover:bg-cyan-900/50' : 'bg-cyan-50 border-cyan-200 hover:bg-cyan-100'
+    },
+    {
+      title: "الشريط المتحرك",
+      description: "إدارة الشريط المتحرك",
+      icon: <MessageSquare className="h-6 w-6" />,
+      link: "/admin/marquee",
+      color: theme === 'dark' ? 'bg-pink-900/30 border-pink-800 hover:bg-pink-900/50' : 'bg-pink-50 border-pink-200 hover:bg-pink-100'
+    },
+    {
+      title: "الإعدادات",
+      description: "إعدادات النظام",
+      icon: <Settings className="h-6 w-6" />,
+      link: "/admin/settings",
+      color: theme === 'dark' ? 'bg-slate-800/50 border-slate-700 hover:bg-slate-800/80' : 'bg-slate-100 border-slate-200 hover:bg-slate-200'
+    },
+  ];
 
-  // Redirect if not admin
-  if (user?.role !== 'admin') {
-    return <Navigate to="/" />;
-  }
+  // Mock summary data
+  const summaryData = {
+    totalRevenue: 25680.45,
+    totalProfit: 10272.18,
+    totalOrders: 342,
+    pendingOrders: 18,
+    lowStockItems: 5,
+  };
+
+  const formatCurrency = (value: number) => {
+    return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
 
   return (
-    <MainLayout>
-      <div className="container mx-auto py-8">
-        <h1 className={`text-3xl font-bold mb-8 text-center ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}>
-          لوحة التحكم
-        </h1>
+    <AdminLayout>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className={`text-2xl md:text-3xl font-bold ${
+            theme === 'dark' ? 'text-blue-300' : 'text-blue-700'
+          }`}>
+            لوحة التحكم
+          </h1>
+          <p className="text-muted-foreground">
+            مرحباً بك في لوحة تحكم متجر إكسسوارات الهواتف
+          </p>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {/* Revenue Card */}
           <Card className={`border ${
-            theme === 'dark' ? 'border-blue-800 bg-blue-950/30' : 'border-blue-200'
+            theme === 'dark' 
+              ? 'border-blue-800 bg-blue-950/30' 
+              : 'border-blue-200 bg-blue-50/50'
           }`}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <Users className={`h-5 w-5 mr-2 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
-                المستخدمين
+              <CardTitle className="text-lg flex items-center justify-between">
+                <span>الإيرادات</span>
+                <DollarSign className={`h-5 w-5 ${
+                  theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
+                }`} />
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">
-                {isLoading ? '...' : stats.totalUsers}
+              <div className="text-2xl font-bold">
+                {formatCurrency(summaryData.totalRevenue)}
               </div>
-              <p className="text-sm text-muted-foreground">إجمالي المستخدمين</p>
+              <p className="text-sm text-muted-foreground">
+                إجمالي الإيرادات هذا الشهر
+              </p>
             </CardContent>
           </Card>
           
+          {/* Profit Card */}
           <Card className={`border ${
-            theme === 'dark' ? 'border-blue-800 bg-blue-950/30' : 'border-blue-200'
+            theme === 'dark' 
+              ? 'border-green-800 bg-green-950/30' 
+              : 'border-green-200 bg-green-50/50'
           }`}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <Package className={`h-5 w-5 mr-2 ${theme === 'dark' ? 'text-pink-400' : 'text-pink-600'}`} />
-                المنتجات
+              <CardTitle className="text-lg flex items-center justify-between">
+                <span>الأرباح</span>
+                <TrendingUp className={`h-5 w-5 ${
+                  theme === 'dark' ? 'text-green-400' : 'text-green-600'
+                }`} />
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">
-                {isLoading ? '...' : stats.totalProducts}
+              <div className="text-2xl font-bold">
+                {formatCurrency(summaryData.totalProfit)}
               </div>
-              <p className="text-sm text-muted-foreground">إجمالي المنتجات</p>
+              <p className="text-sm text-muted-foreground">
+                صافي الأرباح هذا الشهر
+              </p>
             </CardContent>
           </Card>
           
+          {/* Orders Card */}
           <Card className={`border ${
-            theme === 'dark' ? 'border-blue-800 bg-blue-950/30' : 'border-blue-200'
+            theme === 'dark' 
+              ? 'border-amber-800 bg-amber-950/30' 
+              : 'border-amber-200 bg-amber-50/50'
           }`}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <ShoppingBag className={`h-5 w-5 mr-2 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`} />
-                الطلبات
+              <CardTitle className="text-lg flex items-center justify-between">
+                <span>الطلبات</span>
+                <ShoppingCart className={`h-5 w-5 ${
+                  theme === 'dark' ? 'text-amber-400' : 'text-amber-600'
+                }`} />
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">
-                {isLoading ? '...' : stats.totalOrders}
+              <div className="text-2xl font-bold">
+                {summaryData.totalOrders}
               </div>
-              <p className="text-sm text-muted-foreground">إجمالي الطلبات</p>
+              <p className="text-sm text-muted-foreground">
+                إجمالي الطلبات هذا الشهر
+              </p>
             </CardContent>
           </Card>
           
+          {/* Pending Orders Card */}
           <Card className={`border ${
-            theme === 'dark' ? 'border-blue-800 bg-blue-950/30' : 'border-blue-200'
+            theme === 'dark' 
+              ? 'border-red-800 bg-red-950/30' 
+              : 'border-red-200 bg-red-50/50'
           }`}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <BarChart3 className={`h-5 w-5 mr-2 ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`} />
-                بانتظار المراجعة
+              <CardTitle className="text-lg flex items-center justify-between">
+                <span>طلبات معلقة</span>
+                <Bell className={`h-5 w-5 ${
+                  theme === 'dark' ? 'text-red-400' : 'text-red-600'
+                }`} />
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">
-                {isLoading ? '...' : stats.pendingOrders}
+              <div className="text-2xl font-bold">
+                {summaryData.pendingOrders}
               </div>
-              <p className="text-sm text-muted-foreground">طلبات بانتظار المراجعة</p>
+              <p className="text-sm text-muted-foreground">
+                طلبات تحتاج إلى معالجة
+              </p>
             </CardContent>
           </Card>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card className={`border ${
-            theme === 'dark' ? 'border-blue-800 bg-blue-950/30' : 'border-blue-200'
-          }`}>
-            <CardHeader>
-              <CardTitle className={theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}>
-                إدارة المتجر
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Link to="/admin/users">
-                <Button 
-                  variant="outline" 
-                  className={`w-full justify-start ${
-                    theme === 'dark' 
-                      ? 'border-blue-700 hover:bg-blue-900/30' 
-                      : 'border-blue-300 hover:bg-blue-50'
-                  }`}
-                >
-                  <Users className="h-5 w-5 mr-2" />
-                  إدارة المستخدمين
-                </Button>
-              </Link>
-              
-              <Link to="/admin/categories">
-                <Button 
-                  variant="outline" 
-                  className={`w-full justify-start ${
-                    theme === 'dark' 
-                      ? 'border-blue-700 hover:bg-blue-900/30' 
-                      : 'border-blue-300 hover:bg-blue-50'
-                  }`}
-                >
-                  <Package className="h-5 w-5 mr-2" />
-                  إدارة الفئات والأقسام
-                </Button>
-              </Link>
-              
-              <Link to="/admin/products">
-                <Button 
-                  variant="outline" 
-                  className={`w-full justify-start ${
-                    theme === 'dark' 
-                      ? 'border-blue-700 hover:bg-blue-900/30' 
-                      : 'border-blue-300 hover:bg-blue-50'
-                  }`}
-                >
-                  <Package className="h-5 w-5 mr-2" />
-                  إدارة المنتجات
-                </Button>
-              </Link>
-              
-              <Link to="/admin/marquee">
-                <Button 
-                  variant="outline" 
-                  className={`w-full justify-start ${
-                    theme === 'dark' 
-                      ? 'border-pink-700 hover:bg-pink-900/30 text-pink-400' 
-                      : 'border-pink-300 hover:bg-pink-50 text-pink-600'
-                  }`}
-                >
-                  <MessageSquare className="h-5 w-5 mr-2" />
-                  إدارة الشريط المتحرك
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-          
-          <Card className={`border ${
-            theme === 'dark'? 'border-blue-800 bg-blue-950/30' : 'border-blue-200'
-          }`}>
-            <CardHeader>
-              <CardTitle className={theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}>
-                إدارة الطلبات والإشعارات
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Link to="/admin/orders">
-                <Button 
-                  variant="outline" 
-                  className={`w-full justify-start ${
-                    theme === 'dark' 
-                      ? 'border-blue-700 hover:bg-blue-900/30' 
-                      : 'border-blue-300 hover:bg-blue-50'
-                  }`}
-                >
-                  <ShoppingBag className="h-5 w-5 mr-2" />
-                  جميع الطلبات
-                </Button>
-              </Link>
-              
-              <Link to="/admin/orders?status=pending">
-                <Button 
-                  variant="outline" 
-                  className={`w-full justify-start ${
-                    theme === 'dark' 
-                      ? 'border-yellow-700 hover:bg-yellow-900/30 text-yellow-400' 
-                      : 'border-yellow-300 hover:bg-yellow-50 text-yellow-600'
-                  }`}
-                >
-                  <ShoppingBag className="h-5 w-5 mr-2" />
-                  طلبات بانتظار المراجعة
-                </Button>
-              </Link>
-              
-              <Link to="/admin/notifications">
-                <Button 
-                  variant="outline" 
-                  className={`w-full justify-start ${
-                    theme === 'dark' 
-                      ? 'border-pink-700 hover:bg-pink-900/30 text-pink-400' 
-                      : 'border-pink-300 hover:bg-pink-50 text-pink-600'
-                  }`}
-                >
-                  <Package className="h-5 w-5 mr-2" />
-                  إرسال إشعارات للعملاء
-                </Button>
-              </Link>
-              
-              <Link to="/admin/settings">
-                <Button 
-                  variant="outline" 
-                  className={`w-full justify-start ${
-                    theme === 'dark' 
-                      ? 'border-green-700 hover:bg-green-900/30 text-green-400' 
-                      : 'border-green-300 hover:bg-green-50 text-green-600'
-                  }`}
-                >
-                  <Bot className="h-5 w-5 mr-2" />
-                  إعدادات بوت تيليجرام
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {adminModules.map((module, index) => (
+            <Link to={module.link} key={index} className="block">
+              <Card className={`border transition-all duration-300 ${module.color}`}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center">
+                    <span className="ml-2">{module.icon}</span>
+                    <span>{module.title}</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-right">
+                    {module.description}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
         </div>
       </div>
-    </MainLayout>
+    </AdminLayout>
   );
-};
-
-export default AdminDashboard;
+}

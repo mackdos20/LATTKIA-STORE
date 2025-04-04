@@ -1,162 +1,114 @@
-// Mock API service
+// Mock API service for demo purposes
+// In a real app, this would make actual API calls to your backend
 
-export type Category = {
-  id: string;
-  name: string;
-  image: string;
-  description?: string;
-};
-
-export type Product = {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  categoryId: string;
-  subcategoryId?: string;
-  stock: number;
-  discounts?: {
-    quantity: number;
-    percentage: number;
-  }[];
-  featured?: boolean;
-};
+import { Category, Product, Order } from "./db/models";
 
 // Mock data
-const categories: Category[] = [
+const mockCategories: Category[] = [
   {
     id: "1",
-    name: "كفرات حماية",
-    image: "https://images.unsplash.com/photo-1606293459339-aa5a4f0c8d4c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-    description: "كفرات حماية لجميع أنواع الهواتف"
+    name: "شواحن",
+    image: "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80",
   },
   {
     id: "2",
-    name: "شواحن وكابلات",
-    image: "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-    description: "شواحن وكابلات لجميع أنواع الهواتف"
+    name: "سماعات",
+    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80",
   },
   {
     id: "3",
-    name: "سماعات",
-    image: "https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-    description: "سماعات لجميع أنواع الهواتف"
-  }
+    name: "كفرات حماية",
+    image: "https://images.unsplash.com/photo-1586953208448-b95a79798f07?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80",
+  },
 ];
 
-const products: Product[] = [
+const mockProducts: Product[] = [
   {
     id: "1",
-    name: "كفر حماية آيفون 13",
-    description: "كفر حماية مقاوم للصدمات لآيفون 13",
-    price: 15.99,
-    image: "https://images.unsplash.com/photo-1606293459339-aa5a4f0c8d4c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+    name: "شاحن سامسونج سريع",
+    description: "شاحن سامسونج سريع بقوة 25 واط، متوافق مع جميع هواتف سامسونج الحديثة.",
+    price: 25,
+    image: "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80",
     categoryId: "1",
     stock: 100,
+    featured: true,
     discounts: [
-      { quantity: 10, percentage: 10 },
-      { quantity: 50, percentage: 20 }
+      { quantity: "10", percentage: "5" },
+      { quantity: "20", percentage: "10" },
     ],
-    featured: true
   },
   {
     id: "2",
-    name: "شاحن سامسونج سريع",
-    description: "شاحن سامسونج سريع 25 واط",
-    price: 25.99,
-    image: "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+    name: "سماعات بلوتوث",
+    description: "سماعات بلوتوث لاسلكية عالية الجودة مع إلغاء الضوضاء.",
+    price: 50,
+    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80",
     categoryId: "2",
-    stock: 50,
+    stock: 75,
+    featured: true,
     discounts: [
-      { quantity: 10, percentage: 15 },
-      { quantity: 50, percentage: 25 }
+      { quantity: "5", percentage: "5" },
+      { quantity: "10", percentage: "10" },
     ],
-    featured: true
   },
   {
     id: "3",
-    name: "سماعات بلوتوث",
-    description: "سماعات بلوتوث لاسلكية",
-    price: 35.99,
-    image: "https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+    name: "كفر حماية آيفون 13",
+    description: "كفر حماية قوي لهاتف آيفون 13، مقاوم للصدمات.",
+    price: 15,
+    image: "https://images.unsplash.com/photo-1586953208448-b95a79798f07?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80",
     categoryId: "3",
-    stock: 30,
+    stock: 150,
+    featured: true,
     discounts: [
-      { quantity: 5, percentage: 10 },
-      { quantity: 20, percentage: 20 }
+      { quantity: "10", percentage: "5" },
+      { quantity: "20", percentage: "10" },
     ],
-    featured: true
   },
   {
     id: "4",
-    name: "كفر حماية سامسونج S21",
-    description: "كفر حماية مقاوم للصدمات لسامسونج S21",
-    price: 14.99,
-    image: "https://images.unsplash.com/photo-1606293459339-aa5a4f0c8d4c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-    categoryId: "1",
+    name: "حامل هاتف للسيارة",
+    description: "حامل هاتف مغناطيسي للسيارة، سهل التركيب والاستخدام.",
+    price: 20,
+    image: "https://images.unsplash.com/photo-1616112953-c5f9e1f5d7ee?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80",
+    categoryId: "4",
     stock: 80,
-    discounts: [
-      { quantity: 10, percentage: 10 },
-      { quantity: 50, percentage: 20 }
-    ],
-    featured: true
-  }
+    featured: false,
+    discounts: [],
+  },
 ];
 
-// API methods
+// API service
 export const api = {
+  // Categories
   getCategories: async (): Promise<Category[]> => {
-    // Simulate network delay
+    // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
-    return categories;
+    return mockCategories;
   },
   
-  getCategory: async (id: string): Promise<Category | undefined> => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return categories.find(category => category.id === id);
-  },
-  
+  // Products
   getProducts: async (): Promise<Product[]> => {
+    // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
-    return products;
-  },
-  
-  getProductsByCategory: async (categoryId: string): Promise<Product[]> => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return products.filter(product => product.categoryId === categoryId);
-  },
-  
-  getProduct: async (id: string): Promise<Product | undefined> => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return products.find(product => product.id === id);
+    return mockProducts;
   },
   
   getFeaturedProducts: async (): Promise<Product[]> => {
+    // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
-    return products.filter(product => product.featured);
+    return mockProducts.filter(product => product.featured);
   },
   
-  login: async (email: string, password: string): Promise<{ user: any, token: string } | null> => {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // For demo purposes, we'll accept a specific email/password
-    if (email === "admin@example.com" && password === "password") {
-      return {
-        user: {
-          id: "user123",
-          name: "مستخدم تجريبي",
-          email: email,
-          role: "admin"
-        },
-        token: "mock-token-123456"
-      };
-    }
-    
-    return null;
-  }
+  getProductsByCategory: async (categoryId: string): Promise<Product[]> => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return mockProducts.filter(product => product.categoryId === categoryId);
+  },
+  
+  getProduct: async (productId: string): Promise<Product | null> => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return mockProducts.find(product => product.id === productId) || null;
+  },
 };
-
-// Export types for use in other files
-export type { Category, Product };
