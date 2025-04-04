@@ -417,7 +417,7 @@ export default function AdminTelegramBot() {
                           <li>/products - عرض المنتجات المتوفرة</li>
                           <li>/categories - عرض فئات المنتجات</li>
                           <li>/order - الاستعلام عن طلب</li>
-                          <li>/contact - التواصل مع خدمة العملاء</li>
+                          <li>/contact - التواصل معخدمة العملاء</li>
                         </ul>
                       </div>
                       

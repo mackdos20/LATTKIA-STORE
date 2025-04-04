@@ -66,8 +66,7 @@ export default function AdminProfitDashboard() {
         
         // بيانات الأرباح الشهرية
         const mockMonthlyProfits: MonthlyProfit[] = [
-          { month: "يناير", sales: 320, profit: 4800 },
-          { month: "فبراير", sales: 280, profit: 4200 },
+          { month: "يناير", sales: 320, profit: 4800 },{ month: "فبراير", sales: 280, profit: 4200 },
           { month: "مارس", sales: 350, profit: 5250 },
           { month: "أبريل", sales: 400, profit: 6000 },
           { month: "مايو", sales: 450, profit: 6750 },
