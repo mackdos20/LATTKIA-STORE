@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useThemeStore } from "@/lib/theme";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
-import { api } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 
 // نوع بيانات المنتج مع سعر الشراء
@@ -76,7 +75,7 @@ export default function AdminProfitDashboard() {
           { month: "يوليو", sales: 550, profit: 8250 },
           { month: "أغسطس", sales: 600, profit: 9000 },
           { month: "سبتمبر", sales: 520, profit: 7800 },
-          { month: "أكتوبر", sales: 480,profit: 7200 },
+          { month: "أكتوبر", sales: 480, profit: 7200 },
           { month: "نوفمبر", sales: 420, profit: 6300 },
           { month: "ديسمبر", sales: 550, profit: 8250 },
         ];

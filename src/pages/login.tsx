@@ -166,12 +166,12 @@ export default function LoginForm() {
       localStorage.removeItem('loginAttempts');
       setLoginAttempts(0);
       
-      // Mock user data
+      // Mock user data - Fix the type issue by explicitly setting role as 'admin' or 'user'
       const mockUser = {
         id: "user123",
         name: "مستخدم تجريبي",
         email: formData.email,
-        role: formData.email === "admin@example.com" ? "admin" : "user"
+        role: formData.email === "admin@example.com" ? "admin" : "user" as const
       };
       
       // Set session expiration based on remember me
