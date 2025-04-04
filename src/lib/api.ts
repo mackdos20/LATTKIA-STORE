@@ -1,6 +1,7 @@
 import { categories, subcategories, products, orders, users } from './db/mock-data';
 import { Category, Subcategory, Product, Order, Discount } from './db/models';
 import { User } from './stores/auth-store';
+import TelegramBot from 'node-telegram-bot-api';
 
 // Simulate API delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -14,6 +15,27 @@ type DbUser = {
   phone: string;
   role: 'admin' | 'customer';
   telegramId?: string;
+};
+
+// Telegram notifications
+const validateTelegramId = (telegramId: string): boolean => {
+  // التحقق من صحة تنسيق معرف التلغرام
+  return /^@[a-zA-Z0-9_]{5,32}$/.test(telegramId);
+};
+
+const getTelegramBot = () => {
+  // جلب الإعدادات من localStorage
+  const settings = localStorage.getItem('adminSettings');
+  if (!settings) {
+    throw new Error('Telegram settings not configured');
+  }
+
+  const { telegramBot } = JSON.parse(settings);
+  if (!telegramBot?.token) {
+    throw new Error('Telegram bot token not configured');
+  }
+
+  return new TelegramBot(telegramBot.token, { polling: false });
 };
 
 export const api = {
@@ -446,16 +468,36 @@ export const api = {
   
   // Telegram notifications
   sendTelegramNotification: async (userId: string, message: string): Promise<boolean> => {
-    await delay(300);
-    
-    const user = users.find(u => u.id === userId);
-    if (!user || !user.telegramId) {
+    try {
+      // جلب إعدادات البوت
+      const settings = localStorage.getItem('adminSettings');
+      if (!settings) {
+        console.warn('Telegram settings not configured');
+        return false;
+      }
+
+      const { telegramBot } = JSON.parse(settings);
+      if (!telegramBot?.token || !telegramBot?.groupId) {
+        console.warn('Telegram bot token or group ID not configured');
+        return false;
+      }
+
+      const bot = new TelegramBot(telegramBot.token, { polling: false });
+      
+      try {
+        // إرسال الرسالة إلى المجموعة
+        await bot.sendMessage(telegramBot.groupId, message, {
+          parse_mode: 'HTML',
+          disable_web_page_preview: true
+        });
+        return true;
+      } catch (error) {
+        console.error(`Failed to send Telegram message to group ${telegramBot.groupId}:`, error);
+        return false;
+      }
+    } catch (error) {
+      console.error('Error in sendTelegramNotification:', error);
       return false;
     }
-    
-    // In a real app, we would send a message to the Telegram bot API
-    console.log(`Sending Telegram notification to ${user.telegramId}: ${message}`);
-    
-    return true;
   },
 };

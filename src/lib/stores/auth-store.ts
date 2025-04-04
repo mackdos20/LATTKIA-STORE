@@ -1,14 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-export type User = {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  role: 'admin' | 'customer';
-  telegramId?: string;
-};
+import { User } from '@/lib/db/models';
 
 type AuthState = {
   user: User | null;

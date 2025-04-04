@@ -10,6 +10,7 @@ import { useAuthStore } from "@/lib/stores/auth-store";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Bot, Save, Check } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import TelegramBot from "node-telegram-bot-api";
 
 // نفترض أن هذه الإعدادات ستكون مخزنة في مكان ما (في الحالة الحقيقية ستكون في قاعدة البيانات)
 const defaultSettings = {
@@ -61,19 +62,56 @@ const AdminSettings = () => {
     }));
   };
   
+  const validateGroupId = (groupId: string): boolean => {
+    // معرف المجموعة يجب أن يكون رقماً سالباً
+    return /^-?\d+$/.test(groupId);
+  };
+  
   const saveSettings = async () => {
     setIsSaving(true);
     
     try {
-      // في الحالة الحقيقية، سنقوم بإرسال الإعدادات إلى الخادم
-      // لكن هنا سنستخدم localStorage للمحاكاة
+      // التحقق من صحة الإعدادات
+      if (!settings.telegramBot.token) {
+        throw new Error('يرجى إدخال توكن البوت');
+      }
+
+      if (!settings.telegramBot.username) {
+        throw new Error('يرجى إدخال اسم مستخدم البوت');
+      }
+
+      if (!settings.telegramBot.groupId) {
+        throw new Error('يرجى إدخال معرف المجموعة');
+      }
+
+      if (!validateGroupId(settings.telegramBot.groupId)) {
+        throw new Error('معرف المجموعة غير صحيح. يجب أن يكون رقماً سالباً');
+      }
+
+      // حفظ الإعدادات في localStorage
       localStorage.setItem('adminSettings', JSON.stringify(settings));
+      
+      // طباعة البيانات المحفوظة للتحقق
+      console.log('Saved settings:', settings);
+      
+      // اختبار الاتصال بالبوت
+      const bot = new TelegramBot(settings.telegramBot.token, { polling: false });
+      
+      // إضافة معالجة الأخطاء أكثر تفصيلاً
+      try {
+        await bot.sendMessage(settings.telegramBot.groupId, 'تم اختبار الاتصال بالبوت بنجاح');
+        console.log('Message sent successfully');
+      } catch (error) {
+        console.error('Error sending message:', error);
+        throw new Error(`فشل إرسال الرسالة: ${error.message}`);
+      }
       
       toast({
         title: "تم الحفظ",
-        description: "تم حفظ الإعدادات بنجاح",
+        description: "تم حفظ إعدادات البوت بنجاح",
       });
     } catch (error: any) {
+      console.error('Save settings error:', error);
       toast({
         title: "خطأ",
         description: error.message || "حدث خطأ أثناء حفظ الإعدادات",
@@ -88,9 +126,12 @@ const AdminSettings = () => {
     setIsTesting(true);
     
     try {
-      // في الحالة الحقيقية، سنقوم باختبار الاتصال بالبوت
-      // لكن هنا سنقوم بمحاكاة نجاح الاتصال بعد تأخير قصير
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      if (!settings.telegramBot.token || !settings.telegramBot.groupId) {
+        throw new Error('يرجى إدخال توكن البوت ومعرف المجموعة أولاً');
+      }
+
+      const bot = new TelegramBot(settings.telegramBot.token, { polling: false });
+      await bot.sendMessage(settings.telegramBot.groupId, 'تم اختبار الاتصال بالبوت بنجاح');
       
       // تحديث حالة الاتصال
       setSettings(prev => ({
@@ -266,9 +307,20 @@ const AdminSettings = () => {
                         <li>ستحصل على توكن البوت، قم بنسخه ولصقه في الحقل أعلاه.</li>
                         <li>أضف البوت إلى المجموعة التي تريد إرسال الإشعارات إليها.</li>
                         <li>أضف @RawDataBot إلى المجموعة للحصول على معرف المجموعة.</li>
-                        <li>انسخ معرف المجموعة والصقه في الحقل أعلاه.</li>
+                        <li>انسخ معرف المجموعة (يجب أن يكون رقماً سالباً) والصقه في الحقل أعلاه.</li>
+                        <li>تأكد من أن البوت لديه صلاحيات إرسال الرسائل في المجموعة.</li>
                         <li>اضغط على "اختبار الاتصال" للتأكد من أن البوت يعمل بشكل صحيح.</li>
                       </ol>
+                      
+                      <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded">
+                        <h4 className="font-bold text-yellow-500 mb-2">ملاحظات مهمة:</h4>
+                        <ul className="list-disc list-inside space-y-1 text-sm">
+                          <li>تأكد من أن البوت عضو في المجموعة.</li>
+                          <li>تأكد من أن البوت لديه صلاحيات إرسال الرسائل.</li>
+                          <li>معرف المجموعة يجب أن يكون رقماً سالباً.</li>
+                          <li>إذا فشل الاتصال، تأكد من صحة التوكن ومعرف المجموعة.</li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 )}
