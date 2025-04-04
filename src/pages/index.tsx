@@ -230,6 +230,7 @@ const Index = () => {
                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-6">
                             <h3 className="text-xl md:text-2xl font-bold text-white">{category.name}</h3>
                           </div>
+                        </div>
                       </Card>
                     </motion.div>
                   </Link>
@@ -298,7 +299,7 @@ const Index = () => {
                               onClick={() => handleAddToCart(product)}
                               className={`text-xs md:text-sm h-9 ${
                                 theme === 'dark' 
-                                  ? 'bg-pink-600 hover:bg-pink-700 shadow-[0_0_10px_rgba(219,39,119,0.5)] hover:shadow-[0_0_15px_rgba(219,39,119,0.7)]' 
+                                  ? 'bg-pink-600 hover:bg-pink-700 shadow-[0_0_10yk_rgba(219,39,119,0.5)] hover:shadow-[0_0_15px_rgba(219,39,119,0.7)]' 
                                   : 'bg-pink-600 hover:bg-pink-700'
                               } transition-all duration-300`}
                             >

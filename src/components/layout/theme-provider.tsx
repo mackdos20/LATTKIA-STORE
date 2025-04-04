@@ -7,15 +7,16 @@ interface ThemeProviderProps {
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const { theme } = useThemeStore();
-  
+
   useEffect(() => {
-    // Apply theme to document
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
+    const root = window.document.documentElement;
+    
+    if (theme === "dark") {
+      root.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark');
+      root.classList.remove("dark");
     }
   }, [theme]);
-  
+
   return <>{children}</>;
 }

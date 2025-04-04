@@ -1,82 +1,70 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { CartItem } from '@/lib/db/models';
 
-export type CartItem = {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  image?: string;
-  discounts?: { quantity: string; percentage: string }[];
-};
-
-interface CartState {
+type CartState = {
   items: CartItem[];
   addItem: (item: CartItem) => void;
-  removeItem: (itemId: string) => void;
-  updateQuantity: (itemId: string, quantity: number) => void;
+  removeItem: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   getTotal: () => number;
-}
+  getItemsCount: () => number;
+};
 
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
-      
-      addItem: (item) => set((state) => {
-        const existingItem = state.items.find((i) => i.id === item.id);
-        
-        if (existingItem) {
-          return {
-            items: state.items.map((i) =>
-              i.id === item.id
-                ? { ...i, quantity: i.quantity + item.quantity }
-                : i
-            ),
-          };
-        }
-        
-        return { items: [...state.items, item] };
-      }),
-      
-      removeItem: (itemId) => set((state) => ({
-        items: state.items.filter((i) => i.id !== itemId),
-      })),
-      
-      updateQuantity: (itemId, quantity) => set((state) => ({
-        items: state.items.map((i) =>
-          i.id === itemId ? { ...i, quantity } : i
-        ),
-      })),
-      
-      clearCart: () => set({ items: [] }),
-      
+      addItem: (item) => {
+        set((state) => {
+          const existingItem = state.items.find((i) => i.id === item.id);
+          if (existingItem) {
+            return {
+              items: state.items.map((i) =>
+                i.id === item.id ? { ...i, quantity: i.quantity + item.quantity } : i
+              ),
+            };
+          }
+          return { items: [...state.items, item] };
+        });
+      },
+      removeItem: (id) => {
+        set((state) => ({
+          items: state.items.filter((i) => i.id !== id),
+        }));
+      },
+      updateQuantity: (id, quantity) => {
+        set((state) => ({
+          items: state.items.map((i) =>
+            i.id === id ? { ...i, quantity } : i
+          ),
+        }));
+      },
+      clearCart: () => {
+        set({ items: [] });
+      },
       getTotal: () => {
-        const { items } = get();
-        
-        return items.reduce((total, item) => {
-          let itemPrice = item.price;
+        return get().items.reduce((total, item) => {
+          let price = item.price;
           
-          // Apply quantity discounts if available
+          // Apply discounts if available
           if (item.discounts && item.discounts.length > 0) {
-            // Sort discounts by quantity in descending order
-            const sortedDiscounts = [...item.discounts].sort(
-              (a, b) => parseInt(b.quantity) - parseInt(a.quantity)
-            );
+            const applicableDiscounts = item.discounts
+              .filter(d => item.quantity >= d.quantity)
+              .sort((a, b) => b.percentage - a.percentage);
             
-            // Find the applicable discount
-            for (const discount of sortedDiscounts) {
-              if (item.quantity >= parseInt(discount.quantity)) {
-                const discountPercentage = parseInt(discount.percentage) / 100;
-                itemPrice = itemPrice * (1 - discountPercentage);
-                break;
-              }
+            if (applicableDiscounts.length > 0) {
+              const discount = applicableDiscounts[0].percentage / 100;
+              price = price * (1 - discount);
             }
           }
           
-          return total + itemPrice * item.quantity;
+          return total + (price * item.quantity);
         }, 0);
+      },
+      getItemsCount: () => {
+        return get().items.reduce((count, item) => count + item.quantity, 0);
       },
     }),
     {
