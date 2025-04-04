@@ -76,7 +76,7 @@ export default function AdminProfitDashboard() {
           { month: "يوليو", sales: 550, profit: 8250 },
           { month: "أغسطس", sales: 600, profit: 9000 },
           { month: "سبتمبر", sales: 520, profit: 7800 },
-          { month: "أكتوبر", sales: 480, profit: 7200 },
+          { month: "أكتوبر", sales: 480,profit: 7200 },
           { month: "نوفمبر", sales: 420, profit: 6300 },
           { month: "ديسمبر", sales: 550, profit: 8250 },
         ];

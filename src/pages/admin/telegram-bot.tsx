@@ -278,7 +278,8 @@ export default function AdminTelegramBot() {
                 الرسائل
               </TabsTrigger>
               <TabsTrigger 
-                value="notifications"className={`text-base py-3 ${
+                value="notifications"
+                className={`text-base py-3 ${
                   theme === 'dark' ? 'data-[state=active]:bg-blue-900/50' : 'data-[state=active]:bg-blue-100'
                 }`}
               >

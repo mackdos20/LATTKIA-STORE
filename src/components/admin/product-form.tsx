@@ -502,7 +502,8 @@ export function ProductForm({ product, categories, onSubmit, isLoading }: Produc
             {/* قائمة الخصومات */}
             {formData.discounts && formData.discounts.length > 0 ? (
               <div className={`rounded-md border ${
-                theme === 'dark' ? 'border-blue-800 bg-blue-900/20' : 'border-blue-200 bg-blue-50'} p-4`}>
+                theme === 'dark' ? 'border-blue-800 bg-blue-900/20' : 'border-blue-200 bg-blue-50'
+              } p-4`}>
                 <h4 className="font-medium mb-2">الخصومات المضافة:</h4>
                 <div className="space-y-2">
                   {formData.discounts.map((discount, index) => (
