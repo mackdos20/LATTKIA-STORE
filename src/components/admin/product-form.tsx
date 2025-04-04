@@ -242,7 +242,7 @@ export function ProductForm({ product, categories, onSubmit, isLoading }: Produc
                   className={`${
                     theme === 'dark' 
                       ? 'bg-blue-900/30 border-blue-700 focus:border-blue-500' 
-                      : 'bg-white border-blue-200 focus:border-blue-400'
+                      : 'bg-whiteborder-blue-200 focus:border-blue-400'
                   } text-right h-11`}
                   placeholder="أدخل رمز المنتج"
                 />
@@ -268,7 +268,7 @@ export function ProductForm({ product, categories, onSubmit, isLoading }: Produc
               {errors.description && <p className="text-sm text-destructive text-right">{errors.description}</p>}
             </div>
             
-            <divclassName="space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="categoryId" className="text-right block">فئة المنتج</Label>
               <Select
                 value={formData.categoryId}
@@ -578,7 +578,7 @@ export function ProductForm({ product, categories, onSubmit, isLoading }: Produc
               
               <div>
                 <p className="text-sm mb-1">
-                  <span className="font-medium">المخزون الحالي:</span> {formData.stock || 0} قطعة
+                  <span className"font-medium">المخزون الحالي:</span> {formData.stock || 0} قطعة
                 </p>
                 <p className="text-sm mb-1">
                   <span className="font-medium">الحد الأدنى للمخزون:</span>{formData.minStock || 0} قطعة
