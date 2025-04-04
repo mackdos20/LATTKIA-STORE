@@ -268,7 +268,7 @@ export function ProductForm({ product, categories, onSubmit, isLoading }: Produc
               {errors.description && <p className="text-sm text-destructive text-right">{errors.description}</p>}
             </div>
             
-            <div className="space-y-2">
+            <divclassName="space-y-2">
               <Label htmlFor="categoryId" className="text-right block">فئة المنتج</Label>
               <Select
                 value={formData.categoryId}
