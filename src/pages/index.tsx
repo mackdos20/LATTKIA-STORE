@@ -7,17 +7,21 @@ import { api } from "@/lib/api";
 import { Category, Product } from "@/lib/db/models";
 import { useThemeStore } from "@/lib/theme";
 import { motion } from "framer-motion";
-import { ShoppingCart, ArrowRight } from "lucide-react";
+import { ShoppingCart, ArrowRight, User } from "lucide-react";
 import { useCartStore } from "@/lib/stores/cart-store";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthStore } from "@/lib/stores/auth-store";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
   const { theme } = useThemeStore();
+  const { user } = useAuthStore();
   const [categories, setCategories] = useState<Category[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { addItem } = useCartStore();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [marqueeItems, setMarqueeItems] = useState<string[]>([
     "🔥 عروض حصرية على شواحن سامسونج - خصم 15% عند شراء 50 قطعة أو أكثر!",
     "🎧 سماعات بلوتوث لاسلكية - خصم 20% على الكميات!",
@@ -105,10 +109,10 @@ const Index = () => {
     <MainLayout>
       <div className="w-full min-h-screen">
         {/* Hero Section */}
-        <section className={`py-12 px-4 ${theme === 'dark' ? 'bg-gradient-to-b from-blue-950 to-slate-900' : 'bg-gradient-to-b from-blue-50 to-white'}`}>
+        <section className={`py-8 md:py-12 px-4 ${theme === 'dark' ? 'bg-gradient-to-b from-blue-950 to-slate-900' : 'bg-gradient-to-b from-blue-50 to-white'}`}>
           <div className="container mx-auto text-center">
             <motion.h1 
-              className={`text-4xl md:text-5xl lg:text-6xl font-bold mb-6 ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}
+              className={`text-3xl md:text-4xl lg:text-6xl font-bold mb-4 md:mb-6 ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
@@ -117,7 +121,7 @@ const Index = () => {
             </motion.h1>
             
             <motion.p 
-              className="text-xl md:text-2xl mb-8 text-muted-foreground"
+              className="text-lg md:text-xl lg:text-2xl mb-6 md:mb-8 text-muted-foreground"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
@@ -129,20 +133,53 @@ const Index = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4"
             >
               <Link to="/categories">
                 <Button 
-                  size="lg" 
-                  className={`text-lg ${
+                  size={isMobile ? "default" : "lg"} 
+                  className={`text-base md:text-lg h-11 ${
                     theme === 'dark' 
                       ? 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_15px_rgba(37,99,235,0.6)] hover:shadow-[0_0_20px_rgba(37,99,235,0.8)]' 
                       : 'bg-blue-600 hover:bg-blue-700'
-                  } transition-all duration-300`}
+                  } transition-all duration-300 w-full sm:w-auto`}
                 >
                   تصفح المنتجات
                   <ArrowRight className="mr-2 h-5 w-5" />
                 </Button>
               </Link>
+              
+              {user ? (
+                <Link to="/account">
+                  <Button 
+                    size={isMobile ? "default" : "lg"} 
+                    variant="outline"
+                    className={`text-base md:text-lg h-11 ${
+                      theme === 'dark' 
+                        ? 'border-blue-600 text-blue-400 hover:bg-blue-900/30' 
+                        : 'border-blue-600 text-blue-600 hover:bg-blue-50'
+                    } transition-all duration-300 w-full sm:w-auto`}
+                  >
+                    إدارة الحساب
+                    <User className="mr-2 h-5 w-5" />
+                  </Button>
+                </Link>
+              ) : (
+                <Link to="/login">
+                  <Button 
+                    size={isMobile ? "default" : "lg"} 
+                    variant="outline"
+                    className={`text-base md:text-lg h-11 ${
+                      theme === 'dark' 
+                        ? 'border-blue-600 text-blue-400 hover:bg-blue-900/30' 
+                        : 'border-blue-600 text-blue-600 hover:bg-blue-50'
+                    } transition-all duration-300 w-full sm:w-auto`}
+                  >
+                    تسجيل الدخول
+                    <User className="mr-2 h-5 w-5" />
+                  </Button>
+                </Link>
+              )}
             </motion.div>
           </div>
         </section>
@@ -161,16 +198,16 @@ const Index = () => {
         </div>
         
         {/* Categories Section */}
-        <section className="py-12 px-4">
+        <section className="py-8 md:py-12 px-4">
           <div className="container mx-auto">
-            <h2 className={`text-3xl font-bold mb-8 text-center ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}>
+            <h2 className={`text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-center ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}>
               تصفح حسب الفئات
             </h2>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {isLoading ? (
                 Array(3).fill(0).map((_, index) => (
-                  <Card key={index} className={`h-64 ${theme === 'dark' ? 'bg-blue-900/20' : 'bg-blue-50'} animate-pulse`} />
+                  <Card key={index} className={`h-48 md:h-64 ${theme === 'dark' ? 'bg-blue-900/20' : 'bg-blue-50'} animate-pulse`} />
                 ))
               ) : (
                 categories.map((category) => (
@@ -179,7 +216,7 @@ const Index = () => {
                       whileHover={{ scale: 1.03 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <Card className={`h-64 overflow-hidden border ${
+                      <Card className={`h-48 md:h-64 overflow-hidden border ${
                         theme === 'dark' 
                           ? 'border-blue-800 bg-blue-900/20 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]' 
                           : 'border-blue-200 hover:shadow-lg'
@@ -191,9 +228,8 @@ const Index = () => {
                             className="h-full w-full object-cover transition-transform duration-300 hover:scale-110"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-6">
-                            <h3 className="text-2xl font-bold text-white">{category.name}</h3>
+                            <h3 className="text-xl md:text-2xl font-bold text-white">{category.name}</h3>
                           </div>
-                        </div>
                       </Card>
                     </motion.div>
                   </Link>
@@ -204,13 +240,13 @@ const Index = () => {
         </section>
         
         {/* Featured Products */}
-        <section className={`py-12 px-4 ${theme === 'dark' ? 'bg-slate-900' : 'bg-gray-50'}`}>
+        <section className={`py-8 md:py-12 px-4 ${theme === 'dark' ? 'bg-slate-900' : 'bg-gray-50'}`}>
           <div className="container mx-auto">
-            <h2 className={`text-3xl font-bold mb-8 text-center ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}>
+            <h2 className={`text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-center ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}>
               منتجات مميزة
             </h2>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {isLoading ? (
                 Array(4).fill(0).map((_, index) => (
                   <Card key={index} className={`h-80 ${theme === 'dark' ? 'bg-blue-900/20' : 'bg-blue-50'} animate-pulse`} />
@@ -233,7 +269,7 @@ const Index = () => {
                         : 'border-blue-200'
                     } transition-all duration-300`}>
                       <CardContent className="p-0 flex flex-col h-full">
-                        <Link to={`/products/${product.id}`} className="block h-48 overflow-hidden">
+                        <Link to={`/products/${product.id}`} className="block h-40 md:h-48 overflow-hidden">
                           <img 
                             src={product.image} 
                             alt={product.name} 
@@ -241,32 +277,32 @@ const Index = () => {
                           />
                         </Link>
                         
-                        <div className="p-4 flex flex-col flex-grow">
-                          <Link to={`/products/${product.id}`} className="block mb-2">
-                            <h3 className={`font-bold text-lg ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}>
+                        <div className="p-3 md:p-4 flex flex-col flex-grow">
+                          <Link to={`/products/${product.id}`} className="block mb-1 md:mb-2">
+                            <h3 className={`font-bold text-base md:text-lg ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}>
                               {product.name}
                             </h3>
                           </Link>
                           
-                          <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                          <p className="text-muted-foreground text-xs md:text-sm mb-2 md:mb-4 line-clamp-2">
                             {product.description}
                           </p>
                           
                           <div className="mt-auto flex items-center justify-between">
-                            <span className={`font-bold text-lg ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
+                            <span className={`font-bold text-base md:text-lg ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
                               ${product.price}
                             </span>
                             
                             <Button 
                               size="sm" 
                               onClick={() => handleAddToCart(product)}
-                              className={`${
+                              className={`text-xs md:text-sm h-9 ${
                                 theme === 'dark' 
                                   ? 'bg-pink-600 hover:bg-pink-700 shadow-[0_0_10px_rgba(219,39,119,0.5)] hover:shadow-[0_0_15px_rgba(219,39,119,0.7)]' 
                                   : 'bg-pink-600 hover:bg-pink-700'
                               } transition-all duration-300`}
                             >
-                              <ShoppingCart className="h-4 w-4 mr-1" />
+                              <ShoppingCart className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                               أضف للسلة
                             </Button>
                           </div>
@@ -278,12 +314,12 @@ const Index = () => {
               )}
             </div>
             
-            <div className="mt-10 text-center">
+            <div className="mt-8 md:mt-10 text-center">
               <Link to="/categories">
                 <Button 
                   variant="outline" 
-                  size="lg"
-                  className={`${
+                  size={isMobile ? "default" : "lg"}
+                  className={`h-11 ${
                     theme === 'dark' 
                       ? 'border-blue-600 text-blue-400 hover:bg-blue-900/30' 
                       : 'border-blue-600 text-blue-600 hover:bg-blue-50'

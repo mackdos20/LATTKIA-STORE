@@ -11,6 +11,7 @@ import "./index.css";
 import Index from "./pages";
 import LoginForm from "./pages/login";
 import Logout from "./pages/logout";
+import SignupForm from "./pages/signup";
 import Categories from "./pages/categories";
 import CategoryPage from "./pages/category";
 import SubcategoryPage from "./pages/subcategory";
@@ -18,6 +19,7 @@ import ProductPage from "./pages/product";
 import CartPage from "./pages/cart";
 import OrdersPage from "./pages/orders";
 import OrderDetailsPage from "./pages/orders/[id]";
+import AccountPage from "./pages/account";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin";
@@ -41,6 +43,8 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<LoginForm />} />
             <Route path="/logout" element={<Logout />} />
+            <Route path="/signup" element={<SignupForm />} />
+            <Route path="/account" element={<AccountPage />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/categories/:categoryId" element={<CategoryPage />} />
             <Route path="/subcategories/:subcategoryId" element={<SubcategoryPage />} />
