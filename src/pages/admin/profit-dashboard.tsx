@@ -405,7 +405,7 @@ export default function AdminProfitDashboard() {
                           <Tooltip formatter={(value) => formatCurrency(value as number)} />
                           <Legend />
                         </PieChart>
-                      </ResponsiveContainer>
+                      ResponsiveContainer>
                     </div>
                   </CardContent>
                 </Card>
