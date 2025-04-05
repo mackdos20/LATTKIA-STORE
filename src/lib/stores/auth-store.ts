@@ -32,8 +32,8 @@ export const useAuthStore = create<AuthState>((set) => ({
           name: data.user.name,
           email: data.user.email,
           image: data.user.image,
-          createdAt: data.user.createdAt.toISOString(),
-          updatedAt: data.user.updatedAt.toISOString(),
+          createdAt: new Date(data.user.createdAt).toISOString(),
+          updatedAt: new Date(data.user.updatedAt).toISOString(),
         };
         set({ user, isLoading: false });
       }

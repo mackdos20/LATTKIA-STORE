@@ -16,6 +16,7 @@ export type Schema = {
     updatedAt: string;
     image?: string | null;
     role?: string;
+    phone?: string;
   };
 };
 
@@ -73,6 +74,17 @@ export type Order = {
   status: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type OrderItem = {
+  productId: string;
+  quantity: number;
+  price: number;
+};
+
+export type Discount = {
+  quantity: number;
+  percentage: number;
 };
 
 export type Notification = {
