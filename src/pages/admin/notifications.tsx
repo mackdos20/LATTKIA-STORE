@@ -1,327 +1,286 @@
 import { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
-import { MainLayout } from "@/components/layout/MainLayout";
+import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useThemeStore } from "@/lib/theme";
-import { useAuthStore } from "@/lib/stores/auth-store";
 import { useToast } from "@/hooks/use-toast";
-import { api } from "@/lib/api";
-import { User } from "@/lib/stores/auth-store";
-import { Loader2, Send, Users, BellRing, CheckCircle2 } from "lucide-react";
+import { Bell, Check, Plus, Trash2 } from "lucide-react";
+import { ProtectedRoute } from "@/components/auth/route-components";
+import type { Notification, User } from "@/lib/db-types";
 
-const AdminNotifications = () => {
-  const { theme } = useThemeStore();
-  const { user } = useAuthStore();
+function AdminNotificationsPage() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Notification dialog state
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    userId: "",
+    message: "",
+  });
+  
   const { toast } = useToast();
   
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSending, setIsSending] = useState(false);
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [selectAll, setSelectAll] = useState(false);
-  const [notificationMessage, setNotificationMessage] = useState("");
-  const [notificationType, setNotificationType] = useState<"telegram" | "all">("telegram");
-  const [sentCount, setSentCount] = useState(0);
-  const [showSuccess, setShowSuccess] = useState(false);
-  
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        // In a real app, we would fetch users from the API
-        // For now, we'll use mock data
-        setUsers([
-          {
-            id: "customer1",
-            name: "Store Owner",
-            email: "customer@example.com",
-            phone: "+9876543210",
-            role: "customer",
-            telegramId: "@storeowner",
-          },
-          {
-            id: "customer2",
-            name: "Another Store",
-            email: "another@example.com",
-            phone: "+1234567890",
-            role: "customer",
-          },
-        ]);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        toast({
-          title: "خطأ",
-          description: "حدث خطأ أثناء جلب المستخدمين",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // In a real app, we would fetch notifications and users from the API
+    // For now, we'll use mock data
+    const mockUsers: User[] = [
+      {
+        id: "1",
+        name: "Admin User",
+        email: "admin@admin.com",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: "2",
+        name: "Test User",
+        email: "user@example.com",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ];
     
-    fetchUsers();
-  }, [toast]);
+    const mockNotifications: Notification[] = [
+      {
+        id: "1",
+        userId: "2",
+        message: "Your order #12345 has been shipped!",
+        read: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: "2",
+        userId: "2",
+        message: "New products are available in your favorite category!",
+        read: true,
+        createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+        updatedAt: new Date(Date.now() - 86400000).toISOString(),
+      },
+    ];
+    
+    setUsers(mockUsers);
+    setNotifications(mockNotifications);
+    setLoading(false);
+  }, []);
   
-  useEffect(() => {
-    if (selectAll) {
-      setSelectedUsers(users.map(user => user.id));
-    } else {
-      setSelectedUsers([]);
+  const handleOpenDialog = () => {
+    setFormData({
+      userId: users.length > 0 ? users[0].id || "" : "",
+      message: "",
+    });
+    setDialogOpen(true);
+  };
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      // In a real app, we would send this to the API
+      // For now, we'll just update our local state
+      const newNotification: Notification = {
+        id: Date.now().toString(),
+        userId: formData.userId,
+        message: formData.message,
+        read: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      setNotifications(prev => [newNotification, ...prev]);
+      
+      toast({
+        title: "Success",
+        description: "Notification sent successfully",
+      });
+      
+      setDialogOpen(false);
+    } catch (error) {
+      console.error("Error sending notification:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send notification",
+        variant: "destructive",
+      });
     }
-  }, [selectAll, users]);
+  };
   
-  const handleUserSelection = (userId: string) => {
-    setSelectedUsers(prev => {
-      if (prev.includes(userId)) {
-        return prev.filter(id => id !== userId);
-      } else {
-        return [...prev, userId];
-      }
+  const handleMarkAsRead = (id: string) => {
+    setNotifications(prev => 
+      prev.map(notification => 
+        notification.id === id 
+          ? { ...notification, read: true, updatedAt: new Date().toISOString() } 
+          : notification
+      )
+    );
+    
+    toast({
+      title: "Success",
+      description: "Notification marked as read",
     });
   };
   
-  const handleSendNotifications = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleDelete = (id: string) => {
+    setNotifications(prev => prev.filter(notification => notification.id !== id));
     
-    if (!notificationMessage || selectedUsers.length === 0) {
-      toast({
-        title: "خطأ",
-        description: "يرجى كتابة رسالة واختيار مستخدم واحد على الأقل",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsSending(true);
-    setSentCount(0);
-    
-    try {
-      let successCount = 0;
-      
-      // Send notifications to each selected user
-      for (const userId of selectedUsers) {
-        const user = users.find(u => u.id === userId);
-        
-        if (!user) continue;
-        
-        // For Telegram notifications
-        if (notificationType === "telegram" || notificationType === "all") {
-          if (user.telegramId) {
-            const success = await api.sendTelegramNotification(userId, notificationMessage);
-            if (success) successCount++;
-          }
-        }
-        
-        // In a real app, we would also handle SMS notifications here
-      }
-      
-      setSentCount(successCount);
-      setShowSuccess(true);
-      
-      toast({
-        title: "تم الإرسال",
-        description: `تم إرسال الإشعارات بنجاح إلى ${successCount} مستخدم`,
-      });
-      
-      // Reset form after successful send
-      setNotificationMessage("");
-      setSelectedUsers([]);
-      setSelectAll(false);
-    } catch (error: any) {
-      toast({
-        title: "خطأ",
-        description: error.message || "حدث خطأ أثناء إرسال الإشعارات",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSending(false);
-    }
+    toast({
+      title: "Success",
+      description: "Notification deleted successfully",
+    });
   };
   
-  // Redirect if not admin
-  if (user?.role !== 'admin') {
-    return <Navigate to="/" />;
-  }
-
+  const getUserName = (userId: string) => {
+    const user = users.find(user => user.id === userId);
+    return user ? user.name : "Unknown User";
+  };
+  
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  };
+  
   return (
-    <MainLayout>
-      <div className="container mx-auto py-8">
-        <h1 className={`text-3xl font-bold mb-8 text-center ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}>
-          إرسال إشعارات للعملاء
-        </h1>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <Card className={`border ${
-              theme === 'dark' ? 'border-blue-800 bg-blue-950/30' : 'border-blue-200'
-            }`}>
-              <CardHeader>
-                <CardTitle className={theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}>
-                  <div className="flex items-center">
-                    <BellRing className="h-5 w-5 mr-2" />
-                    رسالة الإشعار
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSendNotifications} className="space-y-6" dir="rtl">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="notificationType" className="text-right block">نوع الإشعار</Label>
-                      <Select
-                        value={notificationType}
-                        onValueChange={(value) => setNotificationType(value as "telegram" | "all")}
-                      >
-                        <SelectTrigger className={`${
-                          theme === 'dark' 
-                            ? 'bg-blue-900/30 border-blue-700 focus:border-blue-500 focus:ring-blue-500/50' 
-                            : 'bg-white border-blue-200 focus:border-blue-400'
-                        } text-right`}>
-                          <SelectValue placeholder="اختر نوع الإشعار" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="telegram">تيليجرام فقط</SelectItem>
-                          <SelectItem value="all">تيليجرام</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="notificationMessage" className="text-right block">نص الإشعار</Label>
-                      <Textarea
-                        id="notificationMessage"
-                        value={notificationMessage}
-                        onChange={(e) => setNotificationMessage(e.target.value)}
-                        placeholder="أدخل نص الإشعار الذي سيتم إرساله للعملاء"
-                        rows={5}
-                        className={`${
-                          theme === 'dark' 
-                            ? 'bg-blue-900/30 border-blue-700 focus:border-blue-500 focus:ring-blue-500/50' 
-                            : 'bg-white border-blue-200 focus:border-blue-400'
-                        } text-right`}
-                      />
-                    </div>
-                    
-                    <Button
-                      type="submit"
-                      disabled={isSending || !notificationMessage || selectedUsers.length === 0}
-                      className={`w-full ${
-                        theme === 'dark' 
-                          ? 'bg-pink-600 hover:bg-pink-700 shadow-[0_0_15px_rgba(219,39,119,0.5)] hover:shadow-[0_0_20px_rgba(219,39,119,0.7)]' 
-                          : 'bg-pink-600 hover:bg-pink-700'
-                      } transition-all duration-300`}
-                    >
-                      {isSending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          جاري الإرسال...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="h-4 w-4 mr-2" />
-                          إرسال الإشعارات ({selectedUsers.length})
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </form>
-                
-                {showSuccess && (
-                  <div className={`mt-6 p-4 rounded-lg flex items-center ${
-                    theme === 'dark' ? 'bg-green-900/30 text-green-300' : 'bg-green-100 text-green-700'
-                  }`}>
-                    <CheckCircle2 className="h-5 w-5 mr-2" />
-                    <span>تم إرسال الإشعارات بنجاح إلى {sentCount} مستخدم</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div>
-            <Card className={`border ${
-              theme === 'dark' ? 'border-blue-800 bg-blue-950/30' : 'border-blue-200'
-            }`}>
-              <CardHeader>
-                <CardTitle className={theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Users className="h-5 w-5 mr-2" />
-                      العملاء
-                    </div>
-                    <div className="flex items-center">
-                      <Checkbox
-                        id="selectAll"
-                        checked={selectAll}
-                        onCheckedChange={() => setSelectAll(!selectAll)}
-                      />
-                      <Label htmlFor="selectAll" className="mr-2 text-sm">
-                        تحديد الكل
-                      </Label>
-                    </div>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                  </div>
-                ) : users.length > 0 ? (
-                  <div className="space-y-4">
-                    {users.filter(u => u.role === "customer").map((user) => (
-                      <div 
-                        key={user.id} 
-                        className={`p-4 rounded-lg ${
-                          theme === 'dark' ? 'bg-blue-900/20' : 'bg-blue-50'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-medium">{user.name}</h3>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
-                            <p className="text-sm text-muted-foreground">{user.phone}</p>
-                            {user.telegramId ? (
-                              <p className={`text-sm ${
-                                theme === 'dark' ? 'text-green-400' : 'text-green-600'
-                              }`}>
-                                Telegram: {user.telegramId}
-                              </p>
-                            ) : (
-                              <p className="text-sm text-muted-foreground">
-                                لا يوجد معرف تيليجرام
-                              </p>
-                            )}
-                          </div>
-                          <div>
-                            <Checkbox
-                              id={`user-${user.id}`}
-                              checked={selectedUsers.includes(user.id)}
-                              onCheckedChange={() => handleUserSelection(user.id)}
-                              disabled={notificationType === "telegram" && !user.telegramId}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">لا يوجد عملاء</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+    <AdminLayout>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Notifications</h1>
+          <Button onClick={handleOpenDialog}>
+            <Plus className="mr-2 h-4 w-4" />
+            Send New Notification
+          </Button>
         </div>
+        
+        {loading ? (
+          <div className="space-y-4">
+            {Array(3).fill(0).map((_, index) => (
+              <Card key={index} className="animate-pulse">
+                <CardContent className="p-6">
+                  <div className="h-6 bg-muted rounded w-1/4 mb-2"></div>
+                  <div className="h-4 bg-muted rounded w-3/4 mb-4"></div>
+                  <div className="h-4 bg-muted rounded w-1/2"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : notifications.length === 0 ? (
+          <Card>
+            <CardContent className="p-6 text-center">
+              <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">No notifications yet.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {notifications.map((notification) => (
+              <Card key={notification.id} className={notification.read ? "opacity-70" : ""}>
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-medium mb-1">To: {getUserName(notification.userId)}</p>
+                      <p className="text-lg">{notification.message}</p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        {formatDate(notification.createdAt)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {!notification.read && (
+                        <Button 
+                          size="icon" 
+                          variant="outline"
+                          onClick={() => handleMarkAsRead(notification.id || "")}
+                          title="Mark as read"
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button 
+                        size="icon" 
+                        variant="outline"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDelete(notification.id || "")}
+                        title="Delete notification"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
-    </MainLayout>
+      
+      {/* Send Notification Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send Notification</DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="userId">Recipient</Label>
+                <select
+                  id="userId"
+                  name="userId"
+                  value={formData.userId}
+                  onChange={handleChange}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                  required
+                >
+                  {users.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name} ({user.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="message">Message</Label>
+                <textarea
+                  id="message"
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 min-h-[100px]"
+                  required
+                />
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                Send Notification
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </AdminLayout>
   );
-};
+}
 
-export default AdminNotifications;
+export default function ProtectedAdminNotificationsPage() {
+  return <ProtectedRoute Component={AdminNotificationsPage} />;
+}

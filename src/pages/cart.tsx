@@ -2,304 +2,285 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { useThemeStore } from "@/lib/theme";
+import { useToast } from "@/hooks/use-toast";
 import { useCartStore } from "@/lib/stores/cart-store";
 import { useAuthStore } from "@/lib/stores/auth-store";
-import { Minus, Plus, ShoppingCart, Trash2, ArrowRight } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
-import { motion } from "framer-motion";
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from "lucide-react";
+import { useTheme } from "@/components/layout/theme-provider";
 
-const CartPage = () => {
-  const { theme } = useThemeStore();
-  const { items, removeItem, updateQuantity, clearCart, getTotal } = useCartStore();
-  const { user } = useAuthStore();
+export default function CartPage() {
+  const { theme } = useTheme();
+  const { items, removeItem, updateQuantity, clearCart, getTotalPrice } = useCartStore();
+  const { isAuthenticated } = useAuthStore();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
-
-  const handleQuantityChange = (id: string, quantity: number) => {
-    if (quantity < 1) return;
-    updateQuantity(id, quantity);
-  };
-
-  const handleRemoveItem = (id: string) => {
-    removeItem(id);
-    toast({
-      title: "تمت إزالة المنتج",
-      description: "تم إزالة المنتج من سلة التسوق",
-    });
-  };
-
+  
   const handleCheckout = async () => {
-    if (!user) {
+    if (!isAuthenticated) {
       toast({
-        title: "يرجى تسجيل الدخول",
-        description: "يجب عليك تسجيل الدخول لإتمام عملية الشراء",
+        title: "تسجيل الدخول مطلوب",
+        description: "يرجى تسجيل الدخول للمتابعة إلى الدفع",
         variant: "destructive",
       });
       navigate("/login");
       return;
     }
     
+    if (items.length === 0) {
+      toast({
+        title: "السلة فارغة",
+        description: "أضف بعض المنتجات إلى سلتك قبل المتابعة",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsProcessing(true);
     
     try {
-      const orderItems = items.map(item => ({
-        productId: item.id,
-        quantity: item.quantity,
-      }));
-      
-      const order = await api.createOrder(user.id, orderItems);
+      // Create order
+      const order = await api.createOrder({
+        userId: useAuthStore.getState().user?.id || "",
+        items: items.map(item => ({
+          productId: item.id,
+          quantity: item.quantity,
+          price: calculateItemPrice(item),
+        })),
+        totalAmount: getTotalPrice(),
+        status: "pending",
+      });
       
       clearCart();
       
       toast({
-        title: "تم إنشاء الطلب بنجاح",
-        description: `رقم الطلب: ${order.id}`,
+        title: "تم إنشاء الطلب",
+        description: "تم إنشاء طلبك بنجاح",
       });
       
-      navigate("/orders");
-    } catch (error: any) {
+      navigate(`/orders/${order.id}`);
+    } catch (error) {
+      console.error("Checkout error:", error);
       toast({
-        title: "خطأ",
-        description: error.message || "حدث خطأ أثناء إنشاء الطلب",
+        title: "خطأ في الدفع",
+        description: "حدث خطأ أثناء معالجة طلبك. يرجى المحاولة مرة أخرى.",
         variant: "destructive",
       });
     } finally {
       setIsProcessing(false);
     }
   };
-
-  // Calculate discount for each item
-  const getItemPrice = (item: typeof items[0]) => {
-    if (!item.discounts || item.discounts.length === 0) return item.price;
-    
-    const sortedDiscounts = [...item.discounts].sort(
-      (a, b) => b.minQuantity - a.minQuantity
-    );
-    
-    const applicableDiscount = sortedDiscounts.find(
-      discount => item.quantity >= discount.minQuantity
-    );
-    
-    if (applicableDiscount) {
-      return item.price * (1 - applicableDiscount.discountPercentage / 100);
+  
+  const calculateItemPrice = (item: typeof items[0]) => {
+    if (item.discounts && item.discounts.length > 0) {
+      const applicableDiscount = [...item.discounts]
+        .sort((a, b) => b.quantity - a.quantity)
+        .find(discount => item.quantity >= discount.quantity);
+      
+      if (applicableDiscount) {
+        const discountMultiplier = 1 - applicableDiscount.percentage / 100;
+        return item.price * discountMultiplier;
+      }
     }
     
     return item.price;
   };
-
+  
+  const calculateItemTotal = (item: typeof items[0]) => {
+    return calculateItemPrice(item) * item.quantity;
+  };
+  
+  const handleIncreaseQuantity = (id: string) => {
+    const item = items.find(item => item.id === id);
+    if (item) {
+      updateQuantity(id, item.quantity + 1);
+    }
+  };
+  
+  const handleDecreaseQuantity = (id: string) => {
+    const item = items.find(item => item.id === id);
+    if (item && item.quantity > 1) {
+      updateQuantity(id, item.quantity - 1);
+    }
+  };
+  
   return (
     <MainLayout>
-      <div className="container mx-auto py-8">
-        <h1 className={`text-3xl font-bold mb-8 text-center ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}>
+      <div className="container mx-auto px-4 py-8">
+        <h1 className={`text-3xl font-bold mb-6 ${theme === "dark" ? "text-blue-300" : "text-blue-700"}`}>
           سلة التسوق
         </h1>
         
-        {items.length > 0 ? (
+        {items.length === 0 ? (
+          <Card className={`p-8 text-center ${theme === "dark" ? "bg-slate-900" : "bg-white"}`}>
+            <div className="flex flex-col items-center gap-4">
+              <ShoppingBag className="h-16 w-16 text-muted-foreground" />
+              <h2 className="text-xl font-semibold">سلة التسوق فارغة</h2>
+              <p className="text-muted-foreground mb-4">لم تقم بإضافة أي منتجات إلى سلة التسوق بعد.</p>
+              <Link to="/categories">
+                <Button>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  متابعة التسوق
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              <Card className={`border ${
-                theme === 'dark' ? 'border-blue-800 bg-blue-950/30' : 'border-blue-200'
-              }`}>
-                <CardHeader>
-                  <CardTitle className={theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}>
-                    المنتجات ({items.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {items.map((item) => {
-                      const itemPrice = getItemPrice(item);
-                      const hasDiscount = itemPrice !== item.price;
-                      
-                      return (
-                        <motion.div 
-                          key={item.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.3 }}
-                          className={`flex items-center p-4 rounded-lg ${
-                            theme === 'dark' ? 'bg-blue-900/20' : 'bg-blue-50'
-                          }`}
-                        >
-                          <div className="w-20 h-20 rounded overflow-hidden flex-shrink-0">
-                            <img 
-                              src={item.image} 
-                              alt={item.name} 
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
+              <Card className={`${theme === "dark" ? "bg-slate-900" : "bg-white"}`}>
+                <CardContent className="p-6">
+                  {items.map((item) => (
+                    <div key={item.id} className="py-4">
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="w-24 h-24 rounded-md overflow-hidden">
+                          <img 
+                            src={item.image} 
+                            alt={item.name} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        
+                        <div className="flex-1">
+                          <Link to={`/products/${item.id}`}>
+                            <h3 className="font-medium text-lg hover:underline">{item.name}</h3>
+                          </Link>
                           
-                          <div className="ml-4 flex-grow">
-                            <h3 className="font-medium">{item.name}</h3>
-                            
-                            <div className="flex items-center mt-1">
-                              {hasDiscount ? (
-                                <>
-                                  <span className={`font-bold ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
-                                    ${itemPrice.toFixed(2)}
-                                  </span>
-                                  <span className="text-sm line-through text-muted-foreground ml-2">
-                                    ${item.price.toFixed(2)}
-                                  </span>
-                                </>
-                              ) : (
-                                <span className={`font-bold ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
-                                    ${item.price.toFixed(2)}
-                                  </span>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center mr-4">
-                            <div className={`flex items-center border rounded-md ${
-                              theme === 'dark' ? 'border-blue-700' : 'border-blue-300'
-                            }`}>
+                          <div className="flex flex-wrap items-center gap-4 mt-2">
+                            <div className="flex items-center border rounded-md">
                               <Button 
                                 variant="ghost" 
-                                size="icon"
-                                onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                                disabled={item.quantity <= 1}
-                                className={`text-lg ${
-                                  theme === 'dark' ? 'hover:bg-blue-900/50' : 'hover:bg-blue-50'
-                                }`}
+                                size="icon" 
+                                className="h-8 w-8 rounded-r-none"
+                                onClick={() => handleDecreaseQuantity(item.id)}
                               >
-                                <Minus className="h-4 w-4" />
+                                <Minus className="h-3 w-3" />
                               </Button>
                               
-                              <input
+                              <Input
                                 type="number"
                                 min="1"
                                 value={item.quantity}
-                                onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 1)}
-                                className={`w-12 text-center border-0 focus:ring-0 ${
-                                  theme === 'dark' ? 'bg-transparent' : 'bg-transparent'
-                                }`}
+                                onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
+                                className="w-12 h-8 text-center border-0 rounded-none"
                               />
                               
                               <Button 
                                 variant="ghost" 
-                                size="icon"
-                                onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                                className={`text-lg ${
-                                  theme === 'dark' ? 'hover:bg-blue-900/50' : 'hover:bg-blue-50'
-                                }`}
+                                size="icon" 
+                                className="h-8 w-8 rounded-l-none"
+                                onClick={() => handleIncreaseQuantity(item.id)}
                               >
-                                <Plus className="h-4 w-4" />
+                                <Plus className="h-3 w-3" />
                               </Button>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              <span className={`font-semibold ${theme === "dark" ? "text-green-400" : "text-green-600"}`}>
+                                ${calculateItemPrice(item).toFixed(2)}
+                              </span>
+                              
+                              {item.discounts && item.discounts.length > 0 && item.quantity >= item.discounts[0].quantity && (
+                                <span className="text-sm line-through text-muted-foreground">
+                                  ${item.price.toFixed(2)}
+                                </span>
+                              )}
                             </div>
                             
                             <Button 
                               variant="ghost" 
                               size="icon"
-                              onClick={() => handleRemoveItem(item.id)}
-                              className={`ml-2 ${
-                                theme === 'dark' ? 'hover:bg-red-900/30 text-red-400' : 'hover:bg-red-50 text-red-600'
-                              }`}
+                              className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                              onClick={() => removeItem(item.id)}
                             >
-                              <Trash2 className="h-5 w-5" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
+                          
+                          {item.discounts && item.discounts.length > 0 && (
+                            <div className="mt-2 text-sm">
+                              <span className={`${theme === "dark" ? "text-pink-400" : "text-pink-600"}`}>خصومات الكمية: </span>
+                              {item.discounts.map((discount, index) => (
+                                <span key={index} className={`${
+                                  item.quantity >= discount.quantity 
+                                    ? theme === "dark" ? "text-green-400" : "text-green-600" 
+                                    : "text-muted-foreground"
+                                } ${index > 0 ? "mr-2" : ""}`}>
+                                  {discount.quantity}+ ({discount.percentage}% خصم)
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="text-right">
+                          <p className="font-bold">
+                            ${calculateItemTotal(item).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <Separator className="mt-4" />
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
             </div>
             
             <div>
-              <Card className={`border ${
-                theme === 'dark' ? 'border-blue-800 bg-blue-950/30' : 'border-blue-200'
-              }`}>
-                <CardHeader>
-                  <CardTitle className={theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}>
-                    ملخص الطلب
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
+              <Card className={`${theme === "dark" ? "bg-slate-900" : "bg-white"}`}>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">ملخص الطلب</h3>
+                  
+                  <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span>عدد المنتجات:</span>
-                      <span>{items.reduce((sum, item) => sum + item.quantity, 0)} قطعة</span>
+                      <span className="text-muted-foreground">المجموع الفرعي:</span>
+                      <span>${getTotalPrice().toFixed(2)}</span>
                     </div>
                     
-                    <Separator />
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">الشحن:</span>
+                      <span>مجاني</span>
+                    </div>
                     
-                    <div className="flex justify-between font-bold text-lg">
+                    <Separator className="my-4" />
+                    
+                    <div className="flex justify-between font-bold">
                       <span>المجموع:</span>
-                      <span className={theme === 'dark' ? 'text-green-400' : 'text-green-600'}>
-                        ${getTotal().toFixed(2)}
-                      </span>
+                      <span>${getTotalPrice().toFixed(2)}</span>
                     </div>
                   </div>
-                </CardContent>
-                <CardFooter className="flex flex-col space-y-4">
+                  
                   <Button 
+                    className={`w-full mt-6 ${
+                      theme === "dark" 
+                        ? "bg-blue-600 hover:bg-blue-700" 
+                        : "bg-blue-600 hover:bg-blue-700"
+                    }`}
                     onClick={handleCheckout}
-                    disabled={isProcessing}
-                    className={`w-full ${
-                      theme === 'dark' 
-                        ? 'bg-pink-600 hover:bg-pink-700 shadow-[0_0_15px_rgba(219,39,119,0.5)] hover:shadow-[0_0_20px_rgba(219,39,119,0.7)]' 
-                        : 'bg-pink-600 hover:bg-pink-700'
-                    } transition-all duration-300`}
+                    disabled={isProcessing || items.length === 0}
                   >
-                    {isProcessing ? (
-                      <>جاري إنشاء الطلب...</>
-                    ) : (
-                      <>
-                        <ShoppingCart className="h-5 w-5 mr-2" />
-                        إتمام الطلب
-                      </>
-                    )}
+                    {isProcessing ? "جاري المعالجة..." : "إتمام الطلب"}
                   </Button>
                   
-                  <Link to="/categories" className="w-full">
-                    <Button 
-                      variant="outline" 
-                      className={`w-full ${
-                        theme === 'dark' 
-                          ? 'border-blue-600 text-blue-400 hover:bg-blue-900/30' 
-                          : 'border-blue-600 text-blue-600 hover:bg-blue-50'
-                      }`}
-                    >
-                      <ArrowRight className="h-5 w-5 mr-2" />
-                      متابعة التسوق
-                    </Button>
-                  </Link>
-                </CardFooter>
+                  <div className="mt-4">
+                    <Link to="/categories">
+                      <Button variant="outline" className="w-full">
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        متابعة التسوق
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
               </Card>
             </div>
-          </div>
-        ) : (
-          <div className="text-center py-16">
-            <ShoppingCart className={`h-16 w-16 mx-auto mb-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
-            <h2 className="text-2xl font-medium mb-4">سلة التسوق فارغة</h2>
-            <p className="text-muted-foreground mb-8">لم تقم بإضافة أي منتجات إلى سلة التسوق بعد</p>
-            
-            <Link to="/categories">
-              <Button 
-                size="lg"
-                className={`${
-                  theme === 'dark' 
-                    ? 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_15px_rgba(37,99,235,0.5)] hover:shadow-[0_0_20px_rgba(37,99,235,0.7)]' 
-                    : 'bg-blue-600 hover:bg-blue-700'
-                } transition-all duration-300`}
-              >
-                <ArrowRight className="h-5 w-5 mr-2" />
-                تصفح المنتجات
-              </Button>
-            </Link>
           </div>
         )}
       </div>
     </MainLayout>
   );
-};
-
-export default CartPage;
+}

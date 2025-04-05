@@ -1,90 +1,88 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { Product } from '@/lib/db/models';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-type CartState = {
-  items: Array<{
-    product: Product;
+export interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image: string;
+  discounts?: {
     quantity: number;
-  }>;
-  loading: boolean;
-  error: string | null;
-  addItem: (product: Product, quantity: number) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+    percentage: number;
+  }[];
+}
+
+interface CartState {
+  items: CartItem[];
+  addItem: (item: CartItem) => void;
+  removeItem: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
-  getTotal: () => number;
-  getItemCount: () => number;
-};
+  getTotalItems: () => number;
+  getTotalPrice: () => number;
+}
 
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
-      loading: false,
-      error: null,
-      addItem: (product, quantity) => {
+      addItem: (item) => {
         set((state) => {
-          const existingItem = state.items.find((item) => item.product.id === product.id);
+          const existingItem = state.items.find((i) => i.id === item.id);
+          
           if (existingItem) {
             return {
-              items: state.items.map((item) =>
-                item.product.id === product.id
-                  ? { ...item, quantity: item.quantity + quantity }
-                  : item
+              items: state.items.map((i) =>
+                i.id === item.id
+                  ? { ...i, quantity: i.quantity + item.quantity }
+                  : i
               ),
             };
           }
-          return {
-            items: [...state.items, { product, quantity }],
-          };
+          
+          return { items: [...state.items, item] };
         });
       },
-      removeItem: (productId) => {
+      removeItem: (id) => {
         set((state) => ({
-          items: state.items.filter((item) => item.product.id !== productId),
+          items: state.items.filter((item) => item.id !== id),
         }));
       },
-      updateQuantity: (productId, quantity) => {
+      updateQuantity: (id, quantity) => {
         set((state) => ({
           items: state.items.map((item) =>
-            item.product.id === productId ? { ...item, quantity } : item
+            item.id === id ? { ...item, quantity } : item
           ),
         }));
       },
       clearCart: () => {
         set({ items: [] });
       },
-      getTotal: () => {
+      getTotalItems: () => {
+        return get().items.reduce((total, item) => total + item.quantity, 0);
+      },
+      getTotalPrice: () => {
         return get().items.reduce((total, item) => {
-          let price = item.product.price;
-          
-          // Apply discount if available
-          if (item.product.discounts && item.product.discounts.length > 0) {
-            // Sort discounts by minQuantity in descending order
-            const sortedDiscounts = [...item.product.discounts].sort(
-              (a, b) => b.minQuantity - a.minQuantity
-            );
-            
-            // Find the applicable discount
-            const applicableDiscount = sortedDiscounts.find(
-              (discount) => item.quantity >= discount.minQuantity
-            );
+          // Apply discounts if available
+          if (item.discounts && item.discounts.length > 0) {
+            // Find the highest applicable discount
+            const applicableDiscount = [...item.discounts]
+              .sort((a, b) => b.quantity - a.quantity)
+              .find((discount) => item.quantity >= discount.quantity);
             
             if (applicableDiscount) {
-              price = price * (1 - applicableDiscount.discountPercentage / 100);
+              const discountMultiplier = 1 - applicableDiscount.percentage / 100;
+              return total + item.price * item.quantity * discountMultiplier;
             }
           }
           
-          return total + price * item.quantity;
+          return total + item.price * item.quantity;
         }, 0);
-      },
-      getItemCount: () => {
-        return get().items.reduce((count, item) => count + item.quantity, 0);
       },
     }),
     {
-      name: 'cart-storage',
+      name: "cart-storage",
     }
   )
 );

@@ -1,276 +1,235 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { api } from "@/lib/api";
-import { Product } from "@/lib/db/models";
-import { useThemeStore } from "@/lib/theme";
-import { motion } from "framer-motion";
-import { ChevronRight, Minus, Plus, ShoppingCart } from "lucide-react";
-import { useCartStore } from "@/lib/stores/cart-store";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
+import { useCartStore } from "@/lib/stores/cart-store";
+import { useTheme } from "@/components/layout/theme-provider";
+import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
+import type { Product } from "@/lib/db-types";
 
-const ProductPage = () => {
+export default function ProductPage() {
   const { productId } = useParams<{ productId: string }>();
-  const { theme } = useThemeStore();
   const [product, setProduct] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const { theme } = useTheme();
   const { addItem } = useCartStore();
   const { toast } = useToast();
-
+  
   useEffect(() => {
     const fetchProduct = async () => {
-      if (!productId) return;
-      
       try {
-        const data = await api.getProductById(productId);
-        if (data) {
-          setProduct(data);
-        }
+        if (!productId) return;
+        
+        const fetchedProduct = await api.getProductById(productId);
+        setProduct(fetchedProduct);
       } catch (error) {
         console.error("Error fetching product:", error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
     
     fetchProduct();
   }, [productId]);
-
-  const handleQuantityChange = (value: number) => {
-    if (value < 1) return;
-    if (product && value > product.stock) return;
-    setQuantity(value);
-  };
-
+  
   const handleAddToCart = () => {
     if (!product) return;
     
     addItem({
-      id: product.id,
+      id: product.id || "",
       name: product.name,
       price: product.price,
-      quantity,
+      quantity: quantity,
       image: product.image,
       discounts: product.discounts,
     });
     
     toast({
       title: "تمت الإضافة إلى السلة",
-      description: `تمت إضافة ${quantity} قطعة من ${product.name} إلى سلة التسوق`,
+      description: `تمت إضافة ${product.name} إلى سلة التسوق`,
     });
   };
-
-  // Calculate applicable discount
-  const getApplicableDiscount = () => {
-    if (!product || !product.discounts || product.discounts.length === 0) return null;
-    
-    const sortedDiscounts = [...product.discounts].sort(
-      (a, b) => b.minQuantity - a.minQuantity
-    );
-    
-    return sortedDiscounts.find(discount => quantity >= discount.minQuantity) || null;
+  
+  const increaseQuantity = () => {
+    setQuantity(prev => prev + 1);
   };
-
-  const applicableDiscount = product ? getApplicableDiscount() : null;
-  const discountedPrice = applicableDiscount 
-    ? product!.price * (1 - applicableDiscount.discountPercentage / 100) 
-    : product?.price;
-
-  if (!productId) {
-    return <div>Product ID is missing</div>;
+  
+  const decreaseQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(prev => prev - 1);
+    }
+  };
+  
+  const getDiscountedPrice = () => {
+    if (!product || !product.discounts) return product?.price;
+    
+    const applicableDiscount = [...product.discounts]
+      .sort((a, b) => b.quantity - a.quantity)
+      .find(discount => quantity >= discount.quantity);
+    
+    if (applicableDiscount) {
+      return product.price * (1 - applicableDiscount.percentage / 100);
+    }
+    
+    return product.price;
+  };
+  
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Skeleton className="aspect-square w-full" />
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-3/4" />
+              <Skeleton className="h-6 w-1/4" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
   }
-
+  
+  if (!product) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-8 text-center">
+          <h1 className="text-2xl font-bold mb-4">المنتج غير موجود</h1>
+          <Link to="/categories">
+            <Button>العودة إلى التسوق</Button>
+          </Link>
+        </div>
+      </MainLayout>
+    );
+  }
+  
   return (
     <MainLayout>
-      <div className="container mx-auto py-8">
-        {isLoading ? (
-          <div className="flex flex-col md:flex-row gap-8 animate-pulse">
-            <div className={`w-full md:w-1/2 h-96 rounded-lg ${theme === 'dark' ? 'bg-blue-900/20' : 'bg-blue-50'}`}></div>
-            <div className="w-full md:w-1/2 space-y-4">
-              <div className={`h-10 w-3/4 rounded ${theme === 'dark' ? 'bg-blue-900/20' : 'bg-blue-50'}`}></div>
-              <div className={`h-6 w-1/4 rounded ${theme === 'dark' ? 'bg-blue-900/20' : 'bg-blue-50'}`}></div>
-              <div className={`h-24 w-full rounded ${theme === 'dark' ? 'bg-blue-900/20' : 'bg-blue-50'}`}></div>
-              <div className={`h-12 w-1/3 rounded ${theme === 'dark' ? 'bg-blue-900/20' : 'bg-blue-50'}`}></div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <Link to={`/categories/${product.categoryId}`}>
+            <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <ArrowLeft className="h-4 w-4" />
+              العودة إلى التسوق
+            </Button>
+          </Link>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <Card className={`overflow-hidden ${theme === "dark" ? "bg-slate-900" : "bg-white"} p-4`}>
+            <div className="aspect-square overflow-hidden rounded-md">
+              <img 
+                src={product.image} 
+                alt={product.name} 
+                className="w-full h-full object-cover"
+              />
             </div>
-          </div>
-        ) : product ? (
-          <>
-            <div className="flex items-center mb-8">
-              <Link to="/categories" className={`text-sm ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'} hover:underline`}>
-                الفئات
-              </Link>
-              <ChevronRight className="mx-2 h-4 w-4" />
-              <span className="font-medium">{product.name}</span>
+          </Card>
+          
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+              <div className="flex items-center gap-2">
+                <span className={`text-2xl font-bold ${theme === "dark" ? "text-green-400" : "text-green-600"}`}>
+                  ${getDiscountedPrice()?.toFixed(2)}
+                </span>
+                
+                {product.discounts && product.discounts.length > 0 && quantity >= product.discounts[0].quantity && (
+                  <span className="text-lg line-through text-muted-foreground">
+                    ${product.price.toFixed(2)}
+                  </span>
+                )}
+              </div>
             </div>
             
-            <div className="flex flex-col md:flex-row gap-8">
-              <motion.div 
-                className="w-full md:w-1/2"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Card className={`overflow-hidden border ${
-                  theme === 'dark' 
-                    ? 'border-blue-800 bg-blue-900/20' 
-                    : 'border-blue-200'
-                }`}>
-                  <img 
-                    src={product.image} 
-                    alt={product.name} 
-                    className="w-full h-auto object-cover"
-                  />
-                </Card>
-              </motion.div>
-              
-              <motion.div 
-                className="w-full md:w-1/2"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
-                <h1 className={`text-3xl font-bold mb-2 ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}>
-                  {product.name}
-                </h1>
-                
-                <div className="flex items-center mb-4">
-                  {applicableDiscount ? (
-                    <>
-                      <span className={`text-2xl font-bold ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
-                        ${discountedPrice?.toFixed(2)}
-                      </span>
-                      <span className="text-lg line-through text-muted-foreground ml-2">
-                        ${product.price.toFixed(2)}
-                      </span>
-                      <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
-                        theme === 'dark' 
-                          ? 'bg-pink-900/50 text-pink-300' 
-                          : 'bg-pink-100 text-pink-700'
+            <div>
+              <h2 className="text-lg font-semibold mb-2">الوصف</h2>
+              <p className="text-muted-foreground">{product.description}</p>
+            </div>
+            
+            {product.discounts && product.discounts.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold mb-2">خصومات الكمية</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {product.discounts.map((discount, index) => (
+                    <div 
+                      key={index} 
+                      className={`p-3 rounded-md border ${
+                        quantity >= discount.quantity 
+                          ? theme === "dark" 
+                            ? "border-green-600 bg-green-900/20" 
+                            : "border-green-500 bg-green-50"
+                          : ""
+                      }`}
+                    >
+                      <div className="text-sm font-medium">
+                        {discount.quantity}+ قطعة
+                      </div>
+                      <div className={`text-lg font-bold ${
+                        quantity >= discount.quantity 
+                          ? theme === "dark" ? "text-green-400" : "text-green-600" 
+                          : ""
                       }`}>
-                        خصم {applicableDiscount.discountPercentage}%
-                      </span>
-                    </>
-                  ) : (
-                    <span className={`text-2xl font-bold ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
-                      ${product.price.toFixed(2)}
-                    </span>
-                  )}
-                </div>
-                
-                <p className="text-muted-foreground mb-6">
-                  {product.description}
-                </p>
-                
-                <div className="mb-6">
-                  <p className={`mb-2 ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}>
-                    المخزون المتاح: <span className="font-bold">{product.stock}</span> قطعة
-                  </p>
-                  
-                  {product.discounts && product.discounts.length > 0 && (
-                    <div className="mt-4">
-                      <p className={`font-medium mb-2 ${theme === 'dark' ? 'text-yellow-300' : 'text-yellow-600'}`}>
-                        خصومات الكمية:
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {product.discounts
-                          .sort((a, b) => a.minQuantity - b.minQuantity)
-                          .map((discount, index) => (
-                            <span 
-                              key={index} 
-                              className={`px-3 py-1 rounded-full text-sm ${
-                                quantity >= discount.minQuantity
-                                  ? theme === 'dark'
-                                    ? 'bg-yellow-500/30 text-yellow-200 border border-yellow-500'
-                                    : 'bg-yellow-200 text-yellow-800 border border-yellow-400'
-                                  : theme === 'dark'
-                                    ? 'bg-yellow-900/30 text-yellow-400'
-                                    : 'bg-yellow-50 text-yellow-700'
-                              } transition-colors duration-300`}
-                            >
-                              {discount.minQuantity}+ قطعة: خصم {discount.discountPercentage}%
-                            </span>
-                          ))
-                        }
+                        خصم {discount.percentage}%
                       </div>
                     </div>
-                  )}
+                  ))}
                 </div>
-                
-                <div className="flex items-center mb-6">
-                  <span className="mr-4">الكمية:</span>
-                  <div className={`flex items-center border rounded-md ${
-                    theme === 'dark' ? 'border-blue-700' : 'border-blue-300'
-                  }`}>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => handleQuantityChange(quantity - 1)}
-                      disabled={quantity <= 1}
-                      className={`text-lg ${
-                        theme === 'dark' ? 'hover:bg-blue-900/50' : 'hover:bg-blue-50'
-                      }`}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    
-                    <input
-                      type="number"
-                      min="1"
-                      max={product.stock}
-                      value={quantity}
-                      onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
-                      className={`w-16 text-center border-0 focus:ring-0 ${
-                        theme === 'dark' ? 'bg-transparent' : 'bg-transparent'
-                      }`}
-                    />
-                    
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => handleQuantityChange(quantity + 1)}
-                      disabled={quantity >= product.stock}
-                      className={`text-lg ${
-                        theme === 'dark' ? 'hover:bg-blue-900/50' : 'hover:bg-blue-50'
-                      }`}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="flex items-center">
+              </div>
+            )}
+            
+            <div>
+              <h2 className="text-lg font-semibold mb-2">الكمية</h2>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center border rounded-md">
                   <Button 
-                    onClick={handleAddToCart}
-                    className={`px-8 ${
-                      theme === 'dark' 
-                        ? 'bg-pink-600 hover:bg-pink-700 shadow-[0_0_15px_rgba(219,39,119,0.5)] hover:shadow-[0_0_20px_rgba(219,39,119,0.7)]' 
-                        : 'bg-pink-600 hover:bg-pink-700'
-                    } transition-all duration-300`}
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-10 w-10 rounded-r-none"
+                    onClick={decreaseQuantity}
+                    disabled={quantity <= 1}
                   >
-                    <ShoppingCart className="h-5 w-5 mr-2" />
-                    أضف إلى السلة
+                    <Minus className="h-4 w-4" />
                   </Button>
                   
-                  {applicableDiscount && (
-                    <div className={`ml-4 text-sm ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
-                      المجموع: ${(discountedPrice! * quantity).toFixed(2)}
-                    </div>
-                  )}
+                  <div className="w-12 h-10 flex items-center justify-center text-center">
+                    {quantity}
+                  </div>
+                  
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-10 w-10 rounded-l-none"
+                    onClick={increaseQuantity}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 </div>
-              </motion.div>
+              </div>
             </div>
-          </>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-xl text-muted-foreground">المنتج غير موجود</p>
+            
+            <Button 
+              size="lg" 
+              className={`w-full ${
+                theme === "dark" 
+                  ? "bg-blue-600 hover:bg-blue-700" 
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+              onClick={handleAddToCart}
+            >
+              <ShoppingCart className="mr-2 h-5 w-5" />
+              إضافة إلى السلة
+            </Button>
           </div>
-        )}
+        </div>
       </div>
     </MainLayout>
   );
-};
-
-export default ProductPage;
+}
