@@ -1,19 +1,26 @@
 import { useEffect } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuthStore } from "@/lib/stores/auth-store";
 import { useToast } from "@/hooks/use-toast";
+import { fine } from "@/lib/fine";
 
 export default function Logout() {
-  const { logout } = useAuthStore();
   const { toast } = useToast();
   
   useEffect(() => {
-    logout();
-    toast({
-      title: "تم تسجيل الخروج",
-      description: "تم تسجيل خروجك بنجاح",
-    });
-  }, [logout, toast]);
+    const handleLogout = async () => {
+      try {
+        await fine.auth.signOut();
+        toast({
+          title: "Logged out",
+          description: "You have been successfully logged out",
+        });
+      } catch (error) {
+        console.error("Logout error:", error);
+      }
+    };
+    
+    handleLogout();
+  }, [toast]);
   
   return <Navigate to="/" />;
 }

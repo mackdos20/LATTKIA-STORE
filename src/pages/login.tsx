@@ -1,15 +1,13 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { useAuthStore } from "@/lib/stores/auth-store";
-import { api } from "@/lib/api";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { useThemeStore } from "@/lib/theme";
+import { fine } from "@/lib/fine";
+import { Header } from "@/components/layout/Header";
 
 export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -20,8 +18,6 @@ export default function LoginForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login } = useAuthStore();
-  const { theme } = useThemeStore();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -41,11 +37,11 @@ export default function LoginForm() {
     const newErrors: Record<string, string> = {};
 
     if (!formData.email) {
-      newErrors.email = "البريد الإلكتروني مطلوب";
+      newErrors.email = "Email is required";
     }
 
     if (!formData.password) {
-      newErrors.password = "كلمة المرور مطلوبة";
+      newErrors.password = "Password is required";
     }
 
     setErrors(newErrors);
@@ -60,29 +56,25 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      const result = await api.login(formData.email, formData.password);
-      
-      if (!result) {
-        throw new Error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
-      }
-      
-      login(result.user, result.token);
-      
-      toast({
-        title: "تم تسجيل الدخول بنجاح",
-        description: `مرحباً ${result.user.name}!`,
+      const { data, error } = await fine.auth.signIn.email({
+        email: formData.email,
+        password: formData.password,
       });
       
-      // Redirect based on user role
-      if (result.user.role === 'admin') {
-        navigate("/admin");
-      } else {
-        navigate("/");
+      if (error) {
+        throw new Error(error.message);
       }
+      
+      toast({
+        title: "Success",
+        description: "You have been logged in successfully",
+      });
+      
+      navigate("/");
     } catch (error: any) {
       toast({
-        title: "خطأ",
-        description: error.message || "حدث خطأ أثناء تسجيل الدخول",
+        title: "Error",
+        description: error.message || "Failed to login",
         variant: "destructive",
       });
     } finally {
@@ -91,27 +83,18 @@ export default function LoginForm() {
   };
 
   return (
-    <MainLayout>
-      <div className="container mx-auto flex min-h-[80vh] items-center justify-center py-10">
-        <Card className={`mx-auto w-full max-w-md border ${
-          theme === 'dark' 
-            ? 'border-blue-800 bg-blue-950/30 shadow-[0_0_15px_rgba(59,130,246,0.5)]' 
-            : 'border-blue-200 bg-blue-50/50'
-        } transition-all duration-300`}>
-          <CardHeader className="text-center">
-            <CardTitle className={`text-3xl font-bold ${
-              theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
-            }`}>
-              تسجيل الدخول
-            </CardTitle>
-            <CardDescription className="text-lg">
-              أدخل بيانات الدخول الخاصة بك
-            </CardDescription>
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <div className="container mx-auto flex flex-1 items-center justify-center py-10">
+        <Card className="mx-auto w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl">Login</CardTitle>
+            <CardDescription>Enter your credentials to access your account</CardDescription>
           </CardHeader>
-          <form onSubmit={handleSubmit} dir="rtl">
-            <CardContent className="space-y-6">
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-right block">البريد الإلكتروني</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   name="email"
@@ -120,17 +103,12 @@ export default function LoginForm() {
                   value={formData.email}
                   onChange={handleChange}
                   disabled={isLoading}
-                  className={`${
-                    theme === 'dark' 
-                      ? 'bg-blue-900/30 border-blue-700 focus:border-blue-500 focus:ring-blue-500/50' 
-                      : 'bg-white border-blue-200 focus:border-blue-400'
-                  } text-right`}
                 />
-                {errors.email && <p className="text-sm text-destructive text-right">{errors.email}</p>}
+                {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-right block">كلمة المرور</Label>
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   name="password"
@@ -138,39 +116,37 @@ export default function LoginForm() {
                   value={formData.password}
                   onChange={handleChange}
                   disabled={isLoading}
-                  className={`${
-                    theme === 'dark' 
-                      ? 'bg-blue-900/30 border-blue-700 focus:border-blue-500 focus:ring-blue-500/50' 
-                      : 'bg-white border-blue-200 focus:border-blue-400'
-                  } text-right`}
                 />
-                {errors.password && <p className="text-sm text-destructive text-right">{errors.password}</p>}
+                {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
               </div>
             </CardContent>
 
-            <CardFooter>
+            <CardFooter className="flex flex-col space-y-4">
               <Button 
                 type="submit" 
-                className={`w-full ${
-                  theme === 'dark'
-                    ? 'bg-blue-600 hover:bg-blue-700 shadow-[0_0_10px_rgba(37,99,235,0.5)] hover:shadow-[0_0_15px_rgba(37,99,235,0.8)]'
-                    : 'bg-blue-600 hover:bg-blue-700'
-                } transition-all duration-300`}
+                className="w-full"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    جاري تسجيل الدخول...
+                    Logging in...
                   </>
                 ) : (
-                  "تسجيل الدخول"
+                  "Login"
                 )}
               </Button>
+              
+              <p className="text-center text-sm text-muted-foreground">
+                Don't have an account?{" "}
+                <Link to="/signup" className="text-primary underline underline-offset-4 hover:text-primary/90">
+                  Sign up
+                </Link>
+              </p>
             </CardFooter>
           </form>
         </Card>
       </div>
-    </MainLayout>
+    </div>
   );
 }
