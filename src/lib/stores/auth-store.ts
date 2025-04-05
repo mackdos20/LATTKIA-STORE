@@ -1,69 +1,76 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { fine } from "@/lib/fine";
 import type { User } from "@/lib/db-types";
 
 interface AuthState {
   user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  isAdmin: boolean;
+  isLoading: boolean;
+  error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-  setUser: (user: User | null) => void;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      token: null,
-      isAuthenticated: false,
-      isAdmin: false,
-      login: async (email: string, password: string) => {
-        try {
-          const { data, error } = await fine.auth.signIn.email({
-            email,
-            password,
-          });
-          
-          if (error) throw new Error(error.message);
-          
-          if (data?.user) {
-            set({
-              user: data.user,
-              token: data.session.token,
-              isAuthenticated: true,
-              isAdmin: data.user.email.endsWith("@admin.com"), // Simple admin check
-            });
-          }
-        } catch (error) {
-          console.error("Login error:", error);
-          throw error;
-        }
-      },
-      logout: async () => {
-        try {
-          await fine.auth.signOut();
-        } catch (error) {
-          console.error("Logout error:", error);
-        } finally {
-          set({ user: null, token: null, isAuthenticated: false, isAdmin: false });
-        }
-      },
-      setUser: (user) => {
-        set({
-          user,
-          isAuthenticated: !!user,
-          isAdmin: user?.email.endsWith("@admin.com") || false,
-        });
-      },
-    }),
-    {
-      name: "auth-storage",
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  isLoading: true,
+  error: null,
+  
+  login: async (email: string, password: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data, error } = await fine.auth.signIn.email({
+        email,
+        password,
+      });
+      
+      if (error) throw new Error(error.message);
+      
+      if (data?.user) {
+        const user: User = {
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          image: data.user.image,
+          createdAt: data.user.createdAt.toISOString(),
+          updatedAt: data.user.updatedAt.toISOString(),
+        };
+        set({ user, isLoading: false });
+      }
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
     }
-  )
-);
-
-// Export the User type
-export type { User };
+  },
+  
+  logout: async () => {
+    set({ isLoading: true });
+    try {
+      await fine.auth.signOut();
+      set({ user: null, isLoading: false });
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+    }
+  },
+  
+  checkAuth: async () => {
+    set({ isLoading: true });
+    try {
+      const { data } = fine.auth.useSession();
+      if (data?.user) {
+        const user: User = {
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          image: data.user.image || null,
+          createdAt: new Date(data.user.createdAt).toISOString(),
+          updatedAt: new Date(data.user.updatedAt).toISOString(),
+        };
+        set({ user, isLoading: false });
+      } else {
+        set({ user: null, isLoading: false });
+      }
+    } catch (error: any) {
+      set({ user: null, error: error.message, isLoading: false });
+    }
+  },
+}));

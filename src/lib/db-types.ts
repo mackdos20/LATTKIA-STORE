@@ -15,72 +15,71 @@ export type Schema = {
     createdAt: string;
     updatedAt: string;
     image?: string | null;
+    role?: string;
   };
-  
-  categories: {
-    id?: string;
-    name: string;
-    image: string;
-    slug: string;
-    createdAt: string;
-    updatedAt: string;
-  };
-  
-  subcategories: {
-    id?: string;
-    name: string;
-    categoryId: string;
-    image: string;
-    createdAt: string;
-    updatedAt: string;
-  };
-  
-  products: {
-    id?: string;
-    name: string;
-    description: string;
-    price: number;
-    image: string;
-    subcategoryId: string;
-    categoryId: string;
-    featured?: boolean;
-    discounts?: {
-      quantity: number;
-      percentage: number;
-    }[];
-    createdAt: string;
-    updatedAt: string;
-  };
-  
-  orders: {
-    id?: string;
-    userId: string;
-    items: {
-      productId: string;
-      quantity: number;
-      price: number;
-    }[];
-    totalAmount: number;
-    status: string;
-    createdAt: string;
-    updatedAt: string;
-  };
-  
-  notifications: {
-    id?: string;
-    userId: string;
-    message: string;
-    read: boolean;
-    createdAt: string;
-    updatedAt: string;
-  };
-}
+};
 
 // Export types for use in the application
 export type User = Schema["users"];
-export type Category = Schema["categories"];
-export type Subcategory = Schema["subcategories"];
-export type Product = Schema["products"];
-export type Order = Schema["orders"];
-export type Notification = Schema["notifications"];
 export type Photo = Schema["photos"];
+
+// Define these types to fix build errors
+export type Category = {
+  id: string;
+  name: string;
+  image: string;
+  slug: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Subcategory = {
+  id: string;
+  name: string;
+  categoryId: string;
+  image: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Product = {
+  id?: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  subcategoryId: string;
+  categoryId: string;
+  featured?: boolean;
+  discounts?: {
+    quantity: number;
+    percentage: number;
+  }[];
+  createdAt: string;
+  updatedAt: string;
+  costPrice: number;
+  stock: number;
+};
+
+export type Order = {
+  id?: string;
+  userId: string;
+  items: {
+    productId: string;
+    quantity: number;
+    price: number;
+  }[];
+  totalAmount: number;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Notification = {
+  id?: string;
+  userId: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+  updatedAt: string;
+};

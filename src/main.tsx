@@ -14,6 +14,10 @@ import LoginForm from "./pages/login";
 import Logout from "./pages/logout";
 import PhotoPage from "./pages/photo/[id]";
 
+// Export API service for global use
+import { apiService } from "./lib/api-service";
+window.apiService = apiService;
+
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
