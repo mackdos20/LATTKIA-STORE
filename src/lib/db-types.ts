@@ -43,7 +43,7 @@ export type Subcategory = {
 };
 
 export type Product = {
-  id?: string;
+  id: string;
   name: string;
   description: string;
   price: number;
@@ -62,7 +62,7 @@ export type Product = {
 };
 
 export type Order = {
-  id?: string;
+  id: string;
   userId: string;
   items: {
     productId: string;
