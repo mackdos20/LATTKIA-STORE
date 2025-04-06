@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,11 +41,11 @@ export default function LoginForm() {
     const newErrors: Record<string, string> = {};
 
     if (!formData.email) {
-      newErrors.email = "البريد الإلكتروني مطلوب";
+      newErrors.email = "Email is required";
     }
 
     if (!formData.password) {
-      newErrors.password = "كلمة المرور مطلوبة";
+      newErrors.password = "Password is required";
     }
 
     setErrors(newErrors);
@@ -63,14 +63,14 @@ export default function LoginForm() {
       const result = await api.login(formData.email, formData.password);
       
       if (!result) {
-        throw new Error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+        throw new Error("Invalid email or password");
       }
       
       login(result.user, result.token);
       
       toast({
-        title: "تم تسجيل الدخول بنجاح",
-        description: `مرحباً ${result.user.name}!`,
+        title: "Login successful",
+        description: `Welcome back, ${result.user.name}!`,
       });
       
       // Redirect based on user role
@@ -81,8 +81,8 @@ export default function LoginForm() {
       }
     } catch (error: any) {
       toast({
-        title: "خطأ",
-        description: error.message || "حدث خطأ أثناء تسجيل الدخول",
+        title: "Error",
+        description: error.message || "An error occurred during login",
         variant: "destructive",
       });
     } finally {
@@ -102,16 +102,16 @@ export default function LoginForm() {
             <CardTitle className={`text-3xl font-bold ${
               theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
             }`}>
-              تسجيل الدخول
+              Login
             </CardTitle>
             <CardDescription className="text-lg">
-              أدخل بيانات الدخول الخاصة بك
+              Enter your credentials to access your account
             </CardDescription>
           </CardHeader>
-          <form onSubmit={handleSubmit} dir="rtl">
+          <form onSubmit={handleSubmit}>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-right block">البريد الإلكتروني</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   name="email"
@@ -124,13 +124,13 @@ export default function LoginForm() {
                     theme === 'dark' 
                       ? 'bg-blue-900/30 border-blue-700 focus:border-blue-500 focus:ring-blue-500/50' 
                       : 'bg-white border-blue-200 focus:border-blue-400'
-                  } text-right`}
+                  }`}
                 />
-                {errors.email && <p className="text-sm text-destructive text-right">{errors.email}</p>}
+                {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-right block">كلمة المرور</Label>
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   name="password"
@@ -142,13 +142,21 @@ export default function LoginForm() {
                     theme === 'dark' 
                       ? 'bg-blue-900/30 border-blue-700 focus:border-blue-500 focus:ring-blue-500/50' 
                       : 'bg-white border-blue-200 focus:border-blue-400'
-                  } text-right`}
+                  }`}
                 />
-                {errors.password && <p className="text-sm text-destructive text-right">{errors.password}</p>}
+                {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+              </div>
+              
+              <div className="text-sm">
+                <Link to="/forgot-password" className={`${
+                  theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'
+                }`}>
+                  Forgot password?
+                </Link>
               </div>
             </CardContent>
 
-            <CardFooter>
+            <CardFooter className="flex flex-col space-y-4">
               <Button 
                 type="submit" 
                 className={`w-full ${
@@ -161,12 +169,21 @@ export default function LoginForm() {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    جاري تسجيل الدخول...
+                    Logging in...
                   </>
                 ) : (
-                  "تسجيل الدخول"
+                  "Login"
                 )}
               </Button>
+              
+              <p className="text-center text-sm text-muted-foreground">
+                Don't have an account?{" "}
+                <Link to="/signup" className={`${
+                  theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'
+                }`}>
+                  Sign up
+                </Link>
+              </p>
             </CardFooter>
           </form>
         </Card>

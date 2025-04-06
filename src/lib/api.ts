@@ -1,530 +1,144 @@
-import { categories, subcategories, products, orders, users } from './db/mock-data';
-import { Category, Subcategory, Product, Order, Discount, User } from './db/models';
-import { User as AuthUser } from './stores/auth-store';
-import TelegramBot from 'node-telegram-bot-api';
+import axios from 'axios';
+import { useAuthStore } from './stores/auth-store';
 
-// Simulate API delay
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+// Mock data for development
+const mockCategories = [
+  {
+    id: '1',
+    name: 'Landscapes',
+    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=2070&auto=format&fit=crop',
+  },
+  {
+    id: '2',
+    name: 'Portraits',
+    image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=1964&auto=format&fit=crop',
+  },
+  {
+    id: '3',
+    name: 'Street',
+    image: 'https://images.unsplash.com/photo-1519575706483-221027bfbb31?q=80&w=2071&auto=format&fit=crop',
+  },
+];
 
-// Define a type for the database user that includes password
-type DbUser = {
-  id: string;
-  name: string;
-  email: string;
-  password: string;
-  phone: string;
-  role: 'admin' | 'customer';
-  telegramId?: string;
-};
+const mockProducts = [
+  {
+    id: '1',
+    name: 'Mountain Sunrise',
+    description: 'Beautiful mountain landscape at sunrise with vibrant colors',
+    price: 199.99,
+    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop',
+    categoryId: '1',
+    featured: true,
+    discounts: [
+      { quantity: 3, discount: 10 },
+      { quantity: 5, discount: 15 },
+    ],
+  },
+  {
+    id: '2',
+    name: 'Ocean Waves',
+    description: 'Dramatic ocean waves crashing against the shore',
+    price: 149.99,
+    image: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?q=80&w=2070&auto=format&fit=crop',
+    categoryId: '1',
+    featured: true,
+    discounts: [
+      { quantity: 3, discount: 10 },
+    ],
+  },
+  {
+    id: '3',
+    name: 'Portrait Study',
+    description: 'Professional portrait with dramatic lighting',
+    price: 249.99,
+    image: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?q=80&w=1974&auto=format&fit=crop',
+    categoryId: '2',
+    featured: true,
+    discounts: [],
+  },
+  {
+    id: '4',
+    name: 'City Life',
+    description: 'Urban street photography capturing the essence of city life',
+    price: 179.99,
+    image: 'https://images.unsplash.com/photo-1514924013411-cbf25faa35bb?q=80&w=1990&auto=format&fit=crop',
+    categoryId: '3',
+    featured: true,
+    discounts: [
+      { quantity: 2, discount: 5 },
+      { quantity: 4, discount: 12 },
+    ],
+  },
+];
 
-// Telegram notifications
-const validateTelegramId = (telegramId: string): boolean => {
-  // التحقق من صحة تنسيق معرف التلغرام
-  return /^@[a-zA-Z0-9_]{5,32}$/.test(telegramId);
-};
+// Create API instance
+const apiClient = axios.create({
+  baseURL: '/api',
+});
 
-const getTelegramBot = () => {
-  // جلب الإعدادات من localStorage
-  const settings = localStorage.getItem('adminSettings');
-  if (!settings) {
-    throw new Error('Telegram settings not configured');
+// Add token to requests
+apiClient.interceptors.request.use((config) => {
+  const { token } = useAuthStore.getState();
+  
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-
-  const { telegramBot } = JSON.parse(settings);
-  if (!telegramBot?.token) {
-    throw new Error('Telegram bot token not configured');
-  }
-
-  return new TelegramBot(telegramBot.token, { polling: false });
-};
+  
+  return config;
+});
 
 export const api = {
-  auth: {
-    login: async (email: string, password: string) => {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+  // Auth
+  login: async (email: string, password: string) => {
+    // Mock login for development
+    if (email === 'admin@example.com' && password === 'password') {
+      return {
+        user: {
+          id: '1',
+          name: 'Admin User',
+          email: 'admin@example.com',
+          role: 'admin',
         },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to login');
-      }
-      return data;
-    },
-    register: async (user: Omit<User, 'id'> & { password: string }) => {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+        token: 'mock-token-admin',
+      };
+    } else if (email === 'user@example.com' && password === 'password') {
+      return {
+        user: {
+          id: '2',
+          name: 'Regular User',
+          email: 'user@example.com',
+          role: 'user',
         },
-        body: JSON.stringify(user),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to register');
-      }
-      return data;
-    },
-    logout: async () => {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to logout');
-      }
-      return data;
-    },
+        token: 'mock-token-user',
+      };
+    }
+    
+    return null;
   },
   
   // Categories
-  getCategories: async (): Promise<Category[]> => {
-    await delay(300);
-    return categories;
-  },
-  
-  getCategoryById: async (id: string): Promise<Category | undefined> => {
-    await delay(200);
-    return categories.find(category => category.id === id);
-  },
-  
-  // Subcategories
-  getSubcategories: async (): Promise<Subcategory[]> => {
-    await delay(300);
-    return subcategories;
-  },
-  
-  getSubcategoriesByCategoryId: async (categoryId: string): Promise<Subcategory[]> => {
-    await delay(300);
-    return subcategories.filter(subcategory => subcategory.categoryId === categoryId);
-  },
-  
-  getSubcategoryById: async (id: string): Promise<Subcategory | undefined> => {
-    await delay(200);
-    return subcategories.find(subcategory => subcategory.id === id);
+  getCategories: async () => {
+    // In a real app, this would be an API call
+    // return apiClient.get('/categories').then(res => res.data);
+    return mockCategories;
   },
   
   // Products
-  getProducts: async (): Promise<Product[]> => {
-    await delay(500);
-    return products;
+  getFeaturedProducts: async () => {
+    // In a real app, this would be an API call
+    // return apiClient.get('/products/featured').then(res => res.data);
+    return mockProducts.filter(product => product.featured);
   },
   
-  getProductsBySubcategoryId: async (subcategoryId: string): Promise<Product[]> => {
-    await delay(500);
-    return products.filter(product => product.subcategoryId === subcategoryId);
+  getProductsByCategory: async (categoryId: string) => {
+    // In a real app, this would be an API call
+    // return apiClient.get(`/categories/${categoryId}/products`).then(res => res.data);
+    return mockProducts.filter(product => product.categoryId === categoryId);
   },
   
-  getProductById: async (id: string): Promise<Product | undefined> => {
-    await delay(300);
-    return products.find(product => product.id === id);
-  },
-  
-  getFeaturedProducts: async (): Promise<Product[]> => {
-    await delay(400);
-    // Return a random selection of products
-    return [...products].sort(() => 0.5 - Math.random()).slice(0, 4);
-  },
-  
-  // Orders
-  getOrders: async (userId?: string): Promise<Order[]> => {
-    await delay(600);
-    if (userId) {
-      return orders.filter(order => order.userId === userId);
-    }
-    return orders;
-  },
-  
-  getOrderById: async (id: string): Promise<Order | undefined> => {
-    await delay(400);
-    return orders.find(order => order.id === id);
-  },
-  
-  createOrder: async (userId: string, items: { productId: string; quantity: number }[]): Promise<Order> => {
-    await delay(800);
-    
-    const orderItems = items.map((item, index) => {
-      const product = products.find(p => p.id === item.productId)!;
-      
-      // Calculate discount
-      let price = product.price;
-      if (product.discounts && product.discounts.length > 0) {
-        const sortedDiscounts = [...product.discounts].sort(
-          (a, b) => b.minQuantity - a.minQuantity
-        );
-        
-        const applicableDiscount = sortedDiscounts.find(
-          discount => item.quantity >= discount.minQuantity
-        );
-        
-        if (applicableDiscount) {
-          price = price * (1 - applicableDiscount.discountPercentage / 100);
-        }
-      }
-      
-      return {
-        id: `new-${index}`,
-        orderId: 'new-order',
-        productId: item.productId,
-        product,
-        quantity: item.quantity,
-        price,
-      };
-    });
-    
-    const total = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    
-    const newOrder: Order = {
-      id: `order-${Date.now()}`,
-      userId,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      items: orderItems,
-      total,
-    };
-    
-    // In a real app, we would save this to the database
-    orders.push(newOrder);
-    
-    return newOrder;
-  },
-  
-  updateOrderStatus: async (orderId: string, status: Order['status'], expectedDeliveryTime?: string): Promise<Order> => {
-    await delay(500);
-    
-    const orderIndex = orders.findIndex(order => order.id === orderId);
-    if (orderIndex === -1) {
-      throw new Error('Order not found');
-    }
-    
-    const updatedOrder = {
-      ...orders[orderIndex],
-      status,
-      ...(expectedDeliveryTime ? { expectedDeliveryTime } : {}),
-    };
-    
-    orders[orderIndex] = updatedOrder;
-    
-    return updatedOrder;
-  },
-  
-  // Admin
-  createUser: async (userData: Omit<User, 'id'>): Promise<User> => {
-    await delay(700);
-    
-    const newUserId = `user-${Date.now()}`;
-    
-    // Create a user object without password for returning to the client
-    const userForClient: User = {
-      id: newUserId,
-      name: userData.name,
-      email: userData.email,
-      phone: userData.phone,
-      role: userData.role,
-      ...(userData.telegramId ? { telegramId: userData.telegramId } : {})
-    };
-    
-    // Create a user object with password for the database
-    const newUser = {
-      id: newUserId,
-      name: userData.name,
-      email: userData.email,
-      phone: userData.phone,
-      role: userData.role,
-      password: 'default123', // In a real app, this would be hashed
-      ...(userData.telegramId ? { telegramId: userData.telegramId } : {})
-    };
-    
-    // Fix: Type assertion to avoid TypeScript error
-    users.push(newUser as any);
-    
-    return userForClient;
-  },
-  
-  createProduct: async (productData: Omit<Product, 'id'>, imageFile?: File): Promise<Product> => {
-    await delay(700);
-    
-    // In a real app, we would upload the image to a storage service
-    // and get back a URL to store in the database
-    let imageUrl = productData.image;
-    
-    if (imageFile) {
-      // Simulate image upload
-      await delay(500);
-      // In a real app, this would be the URL returned from the storage service
-      imageUrl = URL.createObjectURL(imageFile);
-    }
-    
-    const newProduct = {
-      id: `product-${Date.now()}`,
-      ...productData,
-      image: imageUrl,
-    };
-    
-    // In a real app, we would save this to the database
-    products.push(newProduct);
-    
-    return newProduct;
-  },
-  
-  updateProduct: async (id: string, productData: Partial<Product>, imageFile?: File): Promise<Product> => {
-    await delay(600);
-    
-    const productIndex = products.findIndex(product => product.id === id);
-    if (productIndex === -1) {
-      throw new Error('Product not found');
-    }
-    
-    // In a real app, we would upload the image to a storage service
-    // and get back a URL to store in the database
-    let imageUrl = productData.image || products[productIndex].image;
-    
-    if (imageFile) {
-      // Simulate image upload
-      await delay(500);
-      // In a real app, this would be the URL returned from the storage service
-      imageUrl = URL.createObjectURL(imageFile);
-    }
-    
-    const updatedProduct = {
-      ...products[productIndex],
-      ...productData,
-      image: imageUrl,
-    };
-    
-    products[productIndex] = updatedProduct;
-    
-    return updatedProduct;
-  },
-  
-  deleteProduct: async (id: string): Promise<void> => {
-    await delay(500);
-    
-    const productIndex = products.findIndex(product => product.id === id);
-    if (productIndex === -1) {
-      throw new Error('Product not found');
-    }
-    
-    products.splice(productIndex, 1);
-  },
-  
-  // Categories and Subcategories management
-  createCategory: async (categoryData: Omit<Category, 'id'>, imageFile?: File): Promise<Category> => {
-    await delay(500);
-    
-    // In a real app, we would upload the image to a storage service
-    // and get back a URL to store in the database
-    let imageUrl = categoryData.image;
-    
-    if (imageFile) {
-      // Simulate image upload
-      await delay(500);
-      // In a real app, this would be the URL returned from the storage service
-      imageUrl = URL.createObjectURL(imageFile);
-    }
-    
-    const newCategory = {
-      id: `category-${Date.now()}`,
-      ...categoryData,
-      image: imageUrl,
-    };
-    
-    categories.push(newCategory);
-    
-    return newCategory;
-  },
-  
-  updateCategory: async (id: string, categoryData: Partial<Category>, imageFile?: File): Promise<Category> => {
-    await delay(400);
-    
-    const categoryIndex = categories.findIndex(category => category.id === id);
-    if (categoryIndex === -1) {
-      throw new Error('Category not found');
-    }
-    
-    // In a real app, we would upload the image to a storage service
-    // and get back a URL to store in the database
-    let imageUrl = categoryData.image || categories[categoryIndex].image;
-    
-    if (imageFile) {
-      // Simulate image upload
-      await delay(500);
-      // In a real app, this would be the URL returned from the storage service
-      imageUrl = URL.createObjectURL(imageFile);
-    }
-    
-    const updatedCategory = {
-      ...categories[categoryIndex],
-      ...categoryData,
-      image: imageUrl,
-    };
-    
-    categories[categoryIndex] = updatedCategory;
-    
-    return updatedCategory;
-  },
-  
-  deleteCategory: async (id: string): Promise<void> => {
-    await delay(400);
-    
-    const categoryIndex = categories.findIndex(category => category.id === id);
-    if (categoryIndex === -1) {
-      throw new Error('Category not found');
-    }
-    
-    categories.splice(categoryIndex, 1);
-  },
-  
-  createSubcategory: async (subcategoryData: Omit<Subcategory, 'id'>, imageFile?: File): Promise<Subcategory> => {
-    await delay(500);
-    
-    // In a real app, we would upload the image to a storage service
-    // and get back a URL to store in the database
-    let imageUrl = subcategoryData.image;
-    
-    if (imageFile) {
-      // Simulate image upload
-      await delay(500);
-      // In a real app, this would be the URL returned from the storage service
-      imageUrl = URL.createObjectURL(imageFile);
-    }
-    
-    const newSubcategory = {
-      id: `subcategory-${Date.now()}`,
-      ...subcategoryData,
-      image: imageUrl,
-    };
-    
-    subcategories.push(newSubcategory);
-    
-    return newSubcategory;
-  },
-  
-  updateSubcategory: async (id: string, subcategoryData: Partial<Subcategory>, imageFile?: File): Promise<Subcategory> => {
-    await delay(400);
-    
-    const subcategoryIndex = subcategories.findIndex(subcategory => subcategory.id === id);
-    if (subcategoryIndex === -1) {
-      throw new Error('Subcategory not found');
-    }
-    
-    // In a real app, we would upload the image to a storage service
-    // and get back a URL to store in the database
-    let imageUrl = subcategoryData.image || subcategories[subcategoryIndex].image;
-    
-    if (imageFile) {
-      // Simulate image upload
-      await delay(500);
-      // In a real app, this would be the URL returned from the storage service
-      imageUrl = URL.createObjectURL(imageFile);
-    }
-    
-    const updatedSubcategory = {
-      ...subcategories[subcategoryIndex],
-      ...subcategoryData,
-      image: imageUrl,
-    };
-    
-    subcategories[subcategoryIndex] = updatedSubcategory;
-    
-    return updatedSubcategory;
-  },
-  
-  deleteSubcategory: async (id: string): Promise<void> => {
-    await delay(400);
-    
-    const subcategoryIndex = subcategories.findIndex(subcategory => subcategory.id === id);
-    if (subcategoryIndex === -1) {
-      throw new Error('Subcategory not found');
-    }
-    
-    subcategories.splice(subcategoryIndex, 1);
-  },
-  
-  // Discounts
-  addProductDiscount: async (productId: string, discount: Omit<Discount, 'id' | 'productId'>): Promise<Product> => {
-    await delay(500);
-    
-    const productIndex = products.findIndex(product => product.id === productId);
-    if (productIndex === -1) {
-      throw new Error('Product not found');
-    }
-    
-    const newDiscount = {
-      id: `discount-${Date.now()}`,
-      productId,
-      ...discount,
-    };
-    
-    const product = products[productIndex];
-    const updatedProduct = {
-      ...product,
-      discounts: [...(product.discounts || []), newDiscount],
-    };
-    
-    products[productIndex] = updatedProduct;
-    
-    return updatedProduct;
-  },
-  
-  removeProductDiscount: async (productId: string, discountId: string): Promise<Product> => {
-    await delay(400);
-    
-    const productIndex = products.findIndex(product => product.id === productId);
-    if (productIndex === -1) {
-      throw new Error('Product not found');
-    }
-    
-    const product = products[productIndex];
-    if (!product.discounts) {
-      throw new Error('Product has no discounts');
-    }
-    
-    const updatedProduct = {
-      ...product,
-      discounts: product.discounts.filter(discount => discount.id !== discountId),
-    };
-    
-    products[productIndex] = updatedProduct;
-    
-    return updatedProduct;
-  },
-  
-  // Telegram notifications
-  sendTelegramNotification: async (userId: string, message: string): Promise<boolean> => {
-    try {
-      // جلب إعدادات البوت
-      const settings = localStorage.getItem('adminSettings');
-      if (!settings) {
-        console.warn('Telegram settings not configured');
-        return false;
-      }
-
-      const { telegramBot } = JSON.parse(settings);
-      if (!telegramBot?.token || !telegramBot?.groupId) {
-        console.warn('Telegram bot token or group ID not configured');
-        return false;
-      }
-
-      const bot = new TelegramBot(telegramBot.token, { polling: false });
-      
-      try {
-        // إرسال الرسالة إلى المجموعة
-        await bot.sendMessage(telegramBot.groupId, message, {
-          parse_mode: 'HTML',
-          disable_web_page_preview: true
-        });
-        return true;
-      } catch (error) {
-        console.error(`Failed to send Telegram message to group ${telegramBot.groupId}:`, error);
-        return false;
-      }
-    } catch (error) {
-      console.error('Error in sendTelegramNotification:', error);
-      return false;
-    }
+  getProduct: async (productId: string) => {
+    // In a real app, this would be an API call
+    // return apiClient.get(`/products/${productId}`).then(res => res.data);
+    return mockProducts.find(product => product.id === productId);
   },
 };

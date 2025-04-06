@@ -10,8 +10,8 @@ export default function Logout() {
   useEffect(() => {
     logout();
     toast({
-      title: "تم تسجيل الخروج",
-      description: "تم تسجيل خروجك بنجاح",
+      title: "Logged out",
+      description: "You have been successfully logged out",
     });
   }, [logout, toast]);
   

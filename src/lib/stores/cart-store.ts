@@ -1,86 +1,85 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Product } from '@/lib/db/models';
 
-type CartState = {
-  items: Array<{
-    product: Product;
+export type CartItem = {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image: string;
+  discounts?: {
     quantity: number;
-  }>;
-  loading: boolean;
-  error: string | null;
-  addItem: (product: Product, quantity: number) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
-  clearCart: () => void;
-  getTotal: () => number;
-  getItemCount: () => number;
+    discount: number;
+  }[];
 };
 
-export const useCartStore = create<CartState>()(
+type CartStore = {
+  items: CartItem[];
+  addItem: (item: CartItem) => void;
+  removeItem: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
+  clearCart: () => void;
+  getTotal: () => number;
+};
+
+export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
-      loading: false,
-      error: null,
-      addItem: (product, quantity) => {
+      
+      addItem: (item) => {
         set((state) => {
-          const existingItem = state.items.find((item) => item.product.id === product.id);
+          const existingItem = state.items.find((i) => i.id === item.id);
+          
           if (existingItem) {
             return {
-              items: state.items.map((item) =>
-                item.product.id === product.id
-                  ? { ...item, quantity: item.quantity + quantity }
-                  : item
+              items: state.items.map((i) =>
+                i.id === item.id
+                  ? { ...i, quantity: i.quantity + item.quantity }
+                  : i
               ),
             };
           }
-          return {
-            items: [...state.items, { product, quantity }],
-          };
+          
+          return { items: [...state.items, item] };
         });
       },
-      removeItem: (productId) => {
+      
+      removeItem: (id) => {
         set((state) => ({
-          items: state.items.filter((item) => item.product.id !== productId),
+          items: state.items.filter((i) => i.id !== id),
         }));
       },
-      updateQuantity: (productId, quantity) => {
+      
+      updateQuantity: (id, quantity) => {
         set((state) => ({
-          items: state.items.map((item) =>
-            item.product.id === productId ? { ...item, quantity } : item
+          items: state.items.map((i) =>
+            i.id === id ? { ...i, quantity } : i
           ),
         }));
       },
+      
       clearCart: () => {
         set({ items: [] });
       },
+      
       getTotal: () => {
         return get().items.reduce((total, item) => {
-          let price = item.product.price;
+          let itemPrice = item.price;
           
-          // Apply discount if available
-          if (item.product.discounts && item.product.discounts.length > 0) {
-            // Sort discounts by minQuantity in descending order
-            const sortedDiscounts = [...item.product.discounts].sort(
-              (a, b) => b.minQuantity - a.minQuantity
-            );
-            
-            // Find the applicable discount
-            const applicableDiscount = sortedDiscounts.find(
-              (discount) => item.quantity >= discount.minQuantity
-            );
-            
+          // Apply quantity discounts if available
+          if (item.discounts && item.discounts.length > 0) {
+            const applicableDiscount = [...item.discounts]
+              .sort((a, b) => b.quantity - a.quantity)
+              .find((discount) => item.quantity >= discount.quantity);
+              
             if (applicableDiscount) {
-              price = price * (1 - applicableDiscount.discountPercentage / 100);
+              itemPrice = itemPrice * (1 - applicableDiscount.discount / 100);
             }
           }
           
-          return total + price * item.quantity;
+          return total + itemPrice * item.quantity;
         }, 0);
-      },
-      getItemCount: () => {
-        return get().items.reduce((count, item) => count + item.quantity, 0);
       },
     }),
     {

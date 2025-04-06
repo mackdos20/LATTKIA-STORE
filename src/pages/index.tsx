@@ -7,24 +7,15 @@ import { api } from "@/lib/api";
 import { Category, Product } from "@/lib/db/models";
 import { useThemeStore } from "@/lib/theme";
 import { motion } from "framer-motion";
-import { ShoppingCart, ArrowRight } from "lucide-react";
-import { useCartStore } from "@/lib/stores/cart-store";
+import { Camera, Image, Grid, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const { theme } = useThemeStore();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [featuredPhotos, setFeaturedPhotos] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { addItem } = useCartStore();
   const { toast } = useToast();
-  const [marqueeItems, setMarqueeItems] = useState<string[]>([
-    "🔥 عروض حصرية على شواحن سامسونج - خصم 15% عند شراء 50 قطعة أو أكثر!",
-    "🎧 سماعات بلوتوث لاسلكية - خصم 20% على الكميات!",
-    "📱 كفرات حماية لجميع الموديلات - اطلب الآن!",
-    "🚚 توصيل مجاني للطلبات فوق 500 دولار!"
-  ]);
-  const [marqueeSpeed, setMarqueeSpeed] = useState("30");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,7 +26,7 @@ const Index = () => {
         ]);
         
         setCategories(categoriesData);
-        setFeaturedProducts(productsData);
+        setFeaturedPhotos(productsData);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -44,68 +35,13 @@ const Index = () => {
     };
     
     fetchData();
-    
-    // جلب بيانات الشريط المتحرك من localStorage
-    const savedItems = localStorage.getItem('marqueeItems');
-    const savedSpeed = localStorage.getItem('marqueeSpeed');
-    
-    if (savedItems) {
-      setMarqueeItems(JSON.parse(savedItems));
-    }
-    
-    if (savedSpeed) {
-      setMarqueeSpeed(savedSpeed);
-    }
-    
-    // تحديث CSS للشريط المتحرك
-    const styleElement = document.createElement('style');
-    styleElement.textContent = `
-      @keyframes marquee {
-        0% {
-          transform: translateX(100%);
-        }
-        100% {
-          transform: translateX(-100%);
-        }
-      }
-      
-      .marquee-content {
-        animation: marquee ${savedSpeed || 30}s linear infinite;
-      }
-    `;
-    
-    // إزالة أي عنصر style سابق
-    const oldStyle = document.getElementById('marquee-style');
-    if (oldStyle) {
-      oldStyle.remove();
-    }
-    
-    // إضافة عنصر style الجديد
-    styleElement.id = 'marquee-style';
-    document.head.appendChild(styleElement);
   }, []);
-
-  const handleAddToCart = (product: Product) => {
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-      image: product.image,
-      discounts: product.discounts,
-    });
-    
-    toast({
-      title: "تمت الإضافة إلى السلة",
-      description: `تمت إضافة ${product.name} إلى سلة التسوق`,
-    });
-  };
 
   return (
     <MainLayout>
       <div className="w-full min-h-screen">
         {/* Hero Section */}
-        <section className={`py-12 px-4 ${theme === 'dark' ? 'bg-gradient-to-b from-blue-950 to-slate-900' : 'bg-gradient-to-b from-blue-50 to-white'}`}>
+        <section className={`py-16 px-4 ${theme === 'dark' ? 'bg-gradient-to-b from-blue-950 to-slate-900' : 'bg-gradient-to-b from-blue-50 to-white'}`}>
           <div className="container mx-auto text-center">
             <motion.h1 
               className={`text-4xl md:text-5xl lg:text-6xl font-bold mb-6 ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}
@@ -113,7 +49,7 @@ const Index = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              متجر إكسسوارات الهواتف بالجملة
+              Photo Portfolio
             </motion.h1>
             
             <motion.p 
@@ -122,7 +58,7 @@ const Index = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              أفضل الإكسسوارات بأسعار الجملة لأصحاب المحلات
+              Capturing moments, preserving memories
             </motion.p>
             
             <motion.div
@@ -139,32 +75,19 @@ const Index = () => {
                       : 'bg-blue-600 hover:bg-blue-700'
                   } transition-all duration-300`}
                 >
-                  تصفح المنتجات
-                  <ArrowRight className="mr-2 h-5 w-5" />
+                  Browse Gallery
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
             </motion.div>
           </div>
         </section>
         
-        {/* Marquee for Offers */}
-        <div className={`py-3 ${theme === 'dark' ? 'bg-pink-900/30' : 'bg-pink-100'} overflow-hidden`}>
-          <div className="marquee-container">
-            <div className="marquee-content">
-              {marqueeItems.map((item, index) => (
-                <span key={index} className={`text-lg font-medium ${theme === 'dark' ? 'text-pink-300' : 'text-pink-600'} px-4`}>
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-        
         {/* Categories Section */}
         <section className="py-12 px-4">
           <div className="container mx-auto">
             <h2 className={`text-3xl font-bold mb-8 text-center ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}>
-              تصفح حسب الفئات
+              Photography Categories
             </h2>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -203,11 +126,11 @@ const Index = () => {
           </div>
         </section>
         
-        {/* Featured Products */}
+        {/* Featured Photos */}
         <section className={`py-12 px-4 ${theme === 'dark' ? 'bg-slate-900' : 'bg-gray-50'}`}>
           <div className="container mx-auto">
             <h2 className={`text-3xl font-bold mb-8 text-center ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}>
-              منتجات مميزة
+              Featured Photos
             </h2>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -216,9 +139,9 @@ const Index = () => {
                   <Card key={index} className={`h-80 ${theme === 'dark' ? 'bg-blue-900/20' : 'bg-blue-50'} animate-pulse`} />
                 ))
               ) : (
-                featuredProducts.map((product) => (
+                featuredPhotos.map((photo) => (
                   <motion.div
-                    key={product.id}
+                    key={photo.id}
                     whileHover={{ 
                       scale: 1.03,
                       boxShadow: theme === 'dark' 
@@ -233,42 +156,29 @@ const Index = () => {
                         : 'border-blue-200'
                     } transition-all duration-300`}>
                       <CardContent className="p-0 flex flex-col h-full">
-                        <Link to={`/products/${product.id}`} className="block h-48 overflow-hidden">
+                        <Link to={`/products/${photo.id}`} className="block h-48 overflow-hidden">
                           <img 
-                            src={product.image} 
-                            alt={product.name} 
+                            src={photo.image} 
+                            alt={photo.name} 
                             className="h-full w-full object-cover transition-transform duration-300 hover:scale-110"
                           />
                         </Link>
                         
                         <div className="p-4 flex flex-col flex-grow">
-                          <Link to={`/products/${product.id}`} className="block mb-2">
+                          <Link to={`/products/${photo.id}`} className="block mb-2">
                             <h3 className={`font-bold text-lg ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}>
-                              {product.name}
+                              {photo.name}
                             </h3>
                           </Link>
                           
                           <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                            {product.description}
+                            {photo.description}
                           </p>
                           
                           <div className="mt-auto flex items-center justify-between">
                             <span className={`font-bold text-lg ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
-                              ${product.price}
+                              ${photo.price}
                             </span>
-                            
-                            <Button 
-                              size="sm" 
-                              onClick={() => handleAddToCart(product)}
-                              className={`${
-                                theme === 'dark' 
-                                  ? 'bg-pink-600 hover:bg-pink-700 shadow-[0_0_10px_rgba(219,39,119,0.5)] hover:shadow-[0_0_15px_rgba(219,39,119,0.7)]' 
-                                  : 'bg-pink-600 hover:bg-pink-700'
-                              } transition-all duration-300`}
-                            >
-                              <ShoppingCart className="h-4 w-4 mr-1" />
-                              أضف للسلة
-                            </Button>
                           </div>
                         </div>
                       </CardContent>
@@ -289,10 +199,53 @@ const Index = () => {
                       : 'border-blue-600 text-blue-600 hover:bg-blue-50'
                   } transition-all duration-300`}
                 >
-                  عرض جميع المنتجات
-                  <ArrowRight className="mr-2 h-5 w-5" />
+                  View All Photos
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
+            </div>
+          </div>
+        </section>
+        
+        {/* About Section */}
+        <section className="py-16 px-4">
+          <div className="container mx-auto max-w-3xl text-center">
+            <h2 className={`text-3xl font-bold mb-6 ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}>
+              About the Photographer
+            </h2>
+            
+            <p className="text-lg mb-8 text-muted-foreground">
+              I'm a passionate photographer with over 10 years of experience capturing life's most beautiful moments. 
+              My work focuses on finding beauty in both natural landscapes and urban environments.
+            </p>
+            
+            <div className="flex justify-center space-x-6">
+              <div className="flex flex-col items-center">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 ${
+                  theme === 'dark' ? 'bg-blue-900' : 'bg-blue-100'
+                }`}>
+                  <Camera className={`h-8 w-8 ${theme === 'dark' ? 'text-blue-300' : 'text-blue-600'}`} />
+                </div>
+                <span className="text-sm text-muted-foreground">Professional Equipment</span>
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 ${
+                  theme === 'dark' ? 'bg-blue-900' : 'bg-blue-100'
+                }`}>
+                  <Image className={`h-8 w-8 ${theme === 'dark' ? 'text-blue-300' : 'text-blue-600'}`} />
+                </div>
+                <span className="text-sm text-muted-foreground">High Resolution</span>
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 ${
+                  theme === 'dark' ? 'bg-blue-900' : 'bg-blue-100'
+                }`}>
+                  <Grid className={`h-8 w-8 ${theme === 'dark' ? 'text-blue-300' : 'text-blue-600'}`} />
+                </div>
+                <span className="text-sm text-muted-foreground">Various Styles</span>
+              </div>
             </div>
           </div>
         </section>
