@@ -1,6 +1,4 @@
 import { FineClient } from "@fine-dev/fine-js";
+import type { Schema } from "./db-types.ts";
 
-/**
- * This variable will hold the Fine client. It will be populated automatically by Fine when you have a backend set up
- */
-export const fine: FineClient | null = null;
+export const fine = new FineClient<Schema>("https://platform.fine.dev/None");
