@@ -5,7 +5,6 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { TooltipProvider } from "./components/ui/tooltip";
-import { ThemeProvider } from "./components/layout/theme-provider";
 import "./index.css";
 
 // Pages
@@ -18,19 +17,17 @@ const queryClient = new QueryClient();
 createRoot(document.getElementById("root")!).render(
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <ThemeProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<LoginForm />} />
-            <Route path="/logout" element={<Logout />} />
-          </Routes>
-        </BrowserRouter>
-        <Sonner />
-        <Toaster />
-        <SpeedInsights />
-      </ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="/logout" element={<Logout />} />
+        </Routes>
+      </BrowserRouter>
+      <Sonner />
+      <Toaster />
+      <SpeedInsights />
     </TooltipProvider>
   </QueryClientProvider>
 );
