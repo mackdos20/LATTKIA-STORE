@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { Product } from '../db/models';
 
 export type CartItem = {
   id: string;
@@ -10,6 +11,8 @@ export type CartItem = {
   discounts?: {
     quantity: number;
     discount: number;
+    minQuantity?: number;
+    discountPercentage?: number;
   }[];
 };
 

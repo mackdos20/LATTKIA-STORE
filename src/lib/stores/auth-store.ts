@@ -1,12 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  role?: string;
-};
+import { User } from '../db/models';
 
 type AuthStore = {
   user: User | null;

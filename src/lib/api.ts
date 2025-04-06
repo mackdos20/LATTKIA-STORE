@@ -1,75 +1,7 @@
 import axios from 'axios';
 import { useAuthStore } from './stores/auth-store';
-
-// Mock data for development
-const mockCategories = [
-  {
-    id: '1',
-    name: 'Landscapes',
-    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: '2',
-    name: 'Portraits',
-    image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=1964&auto=format&fit=crop',
-  },
-  {
-    id: '3',
-    name: 'Street',
-    image: 'https://images.unsplash.com/photo-1519575706483-221027bfbb31?q=80&w=2071&auto=format&fit=crop',
-  },
-];
-
-const mockProducts = [
-  {
-    id: '1',
-    name: 'Mountain Sunrise',
-    description: 'Beautiful mountain landscape at sunrise with vibrant colors',
-    price: 199.99,
-    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop',
-    categoryId: '1',
-    featured: true,
-    discounts: [
-      { quantity: 3, discount: 10 },
-      { quantity: 5, discount: 15 },
-    ],
-  },
-  {
-    id: '2',
-    name: 'Ocean Waves',
-    description: 'Dramatic ocean waves crashing against the shore',
-    price: 149.99,
-    image: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?q=80&w=2070&auto=format&fit=crop',
-    categoryId: '1',
-    featured: true,
-    discounts: [
-      { quantity: 3, discount: 10 },
-    ],
-  },
-  {
-    id: '3',
-    name: 'Portrait Study',
-    description: 'Professional portrait with dramatic lighting',
-    price: 249.99,
-    image: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?q=80&w=1974&auto=format&fit=crop',
-    categoryId: '2',
-    featured: true,
-    discounts: [],
-  },
-  {
-    id: '4',
-    name: 'City Life',
-    description: 'Urban street photography capturing the essence of city life',
-    price: 179.99,
-    image: 'https://images.unsplash.com/photo-1514924013411-cbf25faa35bb?q=80&w=1990&auto=format&fit=crop',
-    categoryId: '3',
-    featured: true,
-    discounts: [
-      { quantity: 2, discount: 5 },
-      { quantity: 4, discount: 12 },
-    ],
-  },
-];
+import { db } from './db/db';
+import { Category, Product, Order, User, Subcategory } from './db/models';
 
 // Create API instance
 const apiClient = axios.create({
@@ -118,27 +50,111 @@ export const api = {
   
   // Categories
   getCategories: async () => {
-    // In a real app, this would be an API call
-    // return apiClient.get('/categories').then(res => res.data);
-    return mockCategories;
+    return db.categories.getAll();
+  },
+  
+  getCategoryById: async (id: string) => {
+    return db.categories.getById(id);
+  },
+  
+  createCategory: async (category: Omit<Category, 'id'>) => {
+    return db.categories.create(category);
+  },
+  
+  updateCategory: async (id: string, category: Partial<Category>) => {
+    return db.categories.update(id, category);
+  },
+  
+  deleteCategory: async (id: string) => {
+    return db.categories.delete(id);
+  },
+  
+  // Subcategories
+  getSubcategories: async () => {
+    return db.subcategories.getAll();
+  },
+  
+  getSubcategoriesByCategoryId: async (categoryId: string) => {
+    return db.subcategories.getByCategoryId(categoryId);
+  },
+  
+  getSubcategoryById: async (id: string) => {
+    return db.subcategories.getById(id);
+  },
+  
+  createSubcategory: async (subcategory: Omit<Subcategory, 'id'>) => {
+    return db.subcategories.create(subcategory);
+  },
+  
+  updateSubcategory: async (id: string, subcategory: Partial<Subcategory>) => {
+    return db.subcategories.update(id, subcategory);
+  },
+  
+  deleteSubcategory: async (id: string) => {
+    return db.subcategories.delete(id);
   },
   
   // Products
+  getProducts: async () => {
+    return db.products.getAll();
+  },
+  
   getFeaturedProducts: async () => {
-    // In a real app, this would be an API call
-    // return apiClient.get('/products/featured').then(res => res.data);
-    return mockProducts.filter(product => product.featured);
+    return db.products.getFeatured();
   },
   
   getProductsByCategory: async (categoryId: string) => {
-    // In a real app, this would be an API call
-    // return apiClient.get(`/categories/${categoryId}/products`).then(res => res.data);
-    return mockProducts.filter(product => product.categoryId === categoryId);
+    return db.products.getByCategoryId(categoryId);
+  },
+  
+  getProductsBySubcategoryId: async (subcategoryId: string) => {
+    return db.products.getBySubcategoryId(subcategoryId);
   },
   
   getProduct: async (productId: string) => {
-    // In a real app, this would be an API call
-    // return apiClient.get(`/products/${productId}`).then(res => res.data);
-    return mockProducts.find(product => product.id === productId);
+    return db.products.getById(productId);
   },
+  
+  getProductById: async (id: string) => {
+    return db.products.getById(id);
+  },
+  
+  createProduct: async (product: Omit<Product, 'id'>) => {
+    return db.products.create(product);
+  },
+  
+  updateProduct: async (id: string, product: Partial<Product>) => {
+    return db.products.update(id, product);
+  },
+  
+  deleteProduct: async (id: string) => {
+    return db.products.delete(id);
+  },
+  
+  // Orders
+  getOrders: async () => {
+    return db.orders.getAll();
+  },
+  
+  getOrderById: async (id: string) => {
+    return db.orders.getById(id);
+  },
+  
+  createOrder: async (order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>) => {
+    return db.orders.create(order);
+  },
+  
+  updateOrderStatus: async (id: string, status: Order['status']) => {
+    return db.orders.updateStatus(id, status);
+  },
+  
+  // Users
+  createUser: async (user: Omit<User, 'id'>) => {
+    return db.users.create(user);
+  },
+  
+  // Notifications
+  sendTelegramNotification: async (message: string) => {
+    return db.notifications.sendTelegram(message);
+  }
 };
