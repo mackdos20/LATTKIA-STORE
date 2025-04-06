@@ -38,11 +38,12 @@ export type OrderItem = {
   name: string;
   price: number;
   quantity: number;
-  product?: string;
+  product?: any; // Changed from string to any to fix type errors
 };
 
 export type Discount = {
   id?: string;
+  productId?: string; // Added to fix type errors
   quantity: number;
   discount: number;
   minQuantity?: number;
@@ -66,4 +67,5 @@ export type User = {
   email: string;
   role: 'user' | 'admin' | 'customer';
   phone?: string;
+  telegramId?: string; // Added to fix type errors
 };

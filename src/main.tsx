@@ -23,6 +23,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<LoginForm />} />
           <Route path="/logout" element={<Logout />} />
+          {/* Add any other routes you need here */}
         </Routes>
       </BrowserRouter>
       <Sonner />
