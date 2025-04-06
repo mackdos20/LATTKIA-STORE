@@ -66,15 +66,21 @@ export default function LoginForm() {
         throw new Error("Invalid email or password");
       }
       
-      login(result.user, result.token);
+      // Ensure the role is one of the allowed values
+      const user = {
+        ...result.user,
+        role: result.user.role as "user" | "admin" | "customer"
+      };
+      
+      login(user, result.token);
       
       toast({
         title: "Login successful",
-        description: `Welcome back, ${result.user.name}!`,
+        description: `Welcome back, ${user.name}!`,
       });
       
       // Redirect based on user role
-      if (result.user.role === 'admin') {
+      if (user.role === 'admin') {
         navigate("/admin");
       } else {
         navigate("/");
